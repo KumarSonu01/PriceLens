@@ -40,9 +40,57 @@ const createProduct = asyncHandler(async (req, res) => {
 });
 
 const getProducts = asyncHandler(async (req, res) => {
-  const products = await Product.find();
+  const {
+    keyword,
+    category,
+    brand,
+    sort,
+    page = 1,
+    limit = 10,
+  } = req.query;
 
-  res.status(200).json(products);
+  const query = {};
+
+  if (keyword) {
+    query.title = {
+      $regex: keyword,
+      $options: "i",
+    };
+  }
+
+  if (category) {
+    query.category = category;
+  }
+
+  if (brand) {
+    query.brand = brand;
+  }
+
+  let sortOption = {};
+
+  if (sort === "latest") {
+    sortOption.createdAt = -1;
+  }
+
+  if (sort === "rating") {
+    sortOption.overallRating = -1;
+  }
+
+  const skip = (page - 1) * limit;
+
+  const products = await Product.find(query)
+    .sort(sortOption)
+    .skip(skip)
+    .limit(Number(limit));
+
+  const totalProducts = await Product.countDocuments(query);
+
+  res.status(200).json({
+    totalProducts,
+    currentPage: Number(page),
+    totalPages: Math.ceil(totalProducts / limit),
+    products,
+  });
 });
 
 const getSingleProduct = asyncHandler(async (req, res) => {
