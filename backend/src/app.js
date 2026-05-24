@@ -4,6 +4,8 @@ const morgan = require("morgan");
 
 const authRoutes = require("./routes/authRoutes");
 const sellerRoutes = require("./routes/sellerRoutes");
+const productRoutes = require("./routes/productRoutes");
+const listingRoutes = require("./routes/listingRoutes");
 
 const {
   notFound,
@@ -25,6 +27,10 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 
 app.use("/api/sellers", sellerRoutes);
+
+app.use("/api/products", productRoutes);
+
+app.use("/api/listings", listingRoutes);
 
 app.use(notFound);
 
