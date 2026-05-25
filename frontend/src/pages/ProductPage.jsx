@@ -13,14 +13,27 @@ const ProductPage = () => {
 
   const [listings, setListings] = useState([]);
 
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] = useState("");
+
+  const lowestPrice = Math.min(
+    ...listings.map((listing) => listing.price)
+  );
+
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const { data } = await api.get(`/products/${id}`);
+        const { data } = await api.get(
+          `/products/${id}`
+        );
 
         setProduct(data);
       } catch (error) {
-        console.log(error);
+        setError(
+          "Failed to load product details"
+        );
       }
     };
 
@@ -32,31 +45,64 @@ const ProductPage = () => {
 
         setListings(data);
       } catch (error) {
-        console.log(error);
+        setError(
+          "Failed to load listings"
+        );
       }
     };
 
-    fetchProduct();
+    const fetchData = async () => {
+      setLoading(true);
 
-    fetchListings();
+      await fetchProduct();
+
+      await fetchListings();
+
+      setLoading(false);
+    };
+
+    fetchData();
   }, [id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen p-10 text-2xl">
+        Loading product...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen p-10 text-2xl text-red-600">
+        {error}
+      </div>
+    );
+  }
 
   if (!product) {
     return (
-      <div className="p-10 text-2xl">
-        Loading...
+      <div className="min-h-screen p-10 text-2xl">
+        Product not found.
       </div>
     );
   }
 
   return (
-    <div className="p-10">
-      <div className="grid grid-cols-2 gap-10">
+    <div className="max-w-7xl mx-auto p-10 min-h-screen">
+      <div className="grid md:grid-cols-2 gap-10">
         <div>
           <img
-            src={product.images[0]}
+            src={
+              product.images[0] ||
+              "https://via.placeholder.com/500"
+            }
             alt={product.title}
-            className="w-full rounded-lg"
+            className="w-full h-[500px] object-cover rounded-lg"
+            onError={(e) => {
+              e.target.src =
+                "https://via.placeholder.com/500";
+            }}
           />
         </div>
 
@@ -78,20 +124,39 @@ const ProductPage = () => {
               Specifications
             </h2>
 
-            {Object.entries(product.specifications).map(
-              ([key, value]) => (
-                <div
-                  key={key}
-                  className="flex gap-4 mb-2"
-                >
-                  <span className="font-bold">
-                    {key}:
-                  </span>
+            {Object.entries(
+              product.specifications
+            ).map(([key, value]) => (
+              <div
+                key={key}
+                className="flex gap-4 mb-2"
+              >
+                <span className="font-bold">
+                  {key}:
+                </span>
 
-                  <span>{value}</span>
-                </div>
-              )
-            )}
+                <span>{value}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-8">
+            <h2 className="text-2xl font-bold mb-4">
+              Features
+            </h2>
+
+            <div className="flex flex-wrap gap-3">
+              {product.features.map(
+                (feature, index) => (
+                  <div
+                    key={index}
+                    className="bg-black text-white px-4 py-2 rounded"
+                  >
+                    {feature}
+                  </div>
+                )
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -101,11 +166,14 @@ const ProductPage = () => {
           Compare Prices
         </h2>
 
-        <div className="grid grid-cols-2 gap-5">
+        <div className="grid md:grid-cols-2 gap-5">
           {listings.map((listing) => (
             <ListingCard
               key={listing._id}
               listing={listing}
+              isBestDeal={
+                listing.price === lowestPrice
+              }
             />
           ))}
         </div>

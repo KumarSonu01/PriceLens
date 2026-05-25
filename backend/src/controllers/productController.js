@@ -2,6 +2,8 @@ const asyncHandler = require("../middlewares/asyncHandler");
 
 const Product = require("../models/Product");
 
+const Listing = require("../models/Listing");
+
 const createSlug = require("../utils/slugify");
 
 const createProduct = asyncHandler(async (req, res) => {
@@ -17,7 +19,9 @@ const createProduct = asyncHandler(async (req, res) => {
 
   const slug = createSlug(title);
 
-  const existingProduct = await Product.findOne({ slug });
+  const existingProduct = await Product.findOne({
+    slug,
+  });
 
   if (existingProduct) {
     res.status(400);
@@ -66,44 +70,88 @@ const getProducts = asyncHandler(async (req, res) => {
     query.brand = brand;
   }
 
-  let sortOption = {};
+  let products = await Product.find(query);
+
+  const productsWithPrices =
+    await Promise.all(
+      products.map(async (product) => {
+        const listing = await Listing.findOne({
+          product: product._id,
+        }).sort({ price: 1 });
+
+        return {
+          ...product.toObject(),
+          lowestPrice: listing
+            ? listing.price
+            : null,
+        };
+      })
+    );
 
   if (sort === "latest") {
-    sortOption.createdAt = -1;
+    productsWithPrices.sort(
+      (a, b) =>
+        new Date(b.createdAt) -
+        new Date(a.createdAt)
+    );
   }
 
   if (sort === "rating") {
-    sortOption.overallRating = -1;
+    productsWithPrices.sort(
+      (a, b) =>
+        b.overallRating - a.overallRating
+    );
+  }
+
+  if (sort === "priceLow") {
+    productsWithPrices.sort(
+      (a, b) =>
+        (a.lowestPrice || Infinity) -
+        (b.lowestPrice || Infinity)
+    );
+  }
+
+  if (sort === "priceHigh") {
+    productsWithPrices.sort(
+      (a, b) =>
+        (b.lowestPrice || 0) -
+        (a.lowestPrice || 0)
+    );
   }
 
   const skip = (page - 1) * limit;
 
-  const products = await Product.find(query)
-    .sort(sortOption)
-    .skip(skip)
-    .limit(Number(limit));
-
-  const totalProducts = await Product.countDocuments(query);
+  const paginatedProducts =
+    productsWithPrices.slice(
+      skip,
+      skip + Number(limit)
+    );
 
   res.status(200).json({
-    totalProducts,
+    totalProducts: products.length,
     currentPage: Number(page),
-    totalPages: Math.ceil(totalProducts / limit),
-    products,
+    totalPages: Math.ceil(
+      products.length / limit
+    ),
+    products: paginatedProducts,
   });
 });
 
-const getSingleProduct = asyncHandler(async (req, res) => {
-  const product = await Product.findById(req.params.id);
+const getSingleProduct = asyncHandler(
+  async (req, res) => {
+    const product = await Product.findById(
+      req.params.id
+    );
 
-  if (!product) {
-    res.status(404);
+    if (!product) {
+      res.status(404);
 
-    throw new Error("Product not found");
+      throw new Error("Product not found");
+    }
+
+    res.status(200).json(product);
   }
-
-  res.status(200).json(product);
-});
+);
 
 module.exports = {
   createProduct,
