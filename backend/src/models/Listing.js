@@ -21,9 +21,9 @@ const listingSchema = new mongoose.Schema(
     },
 
     seller: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Seller",
-      default: null,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null,
     },
 
     price: {
@@ -61,9 +61,9 @@ const listingSchema = new mongoose.Schema(
       default: [],
     },
 
-    offers: {
-      type: [String],
-      default: [],
+    offer: {
+    type: String,
+    default: "NA",
     },
   },
   {

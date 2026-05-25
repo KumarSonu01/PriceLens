@@ -1,25 +1,34 @@
 const express = require("express");
 
+const router = express.Router();
+
+const {
+  protect,
+} = require("../middlewares/authMiddleware");
+
 const {
   createListing,
   getProductListings,
+  getSellerListings,
+  deleteListing,
 } = require("../controllers/listingController");
-
-const { protect } = require("../middlewares/authMiddleware");
-
-const validate = require("../middlewares/validateMiddleware");
-
-const {
-  listingSchema,
-} = require("../validators/listingValidator");
-
-const router = express.Router();
 
 router.post(
   "/",
   protect,
-  validate(listingSchema),
   createListing
+);
+
+router.get(
+  "/my-listings",
+  protect,
+  getSellerListings
+);
+
+router.delete(
+  "/:id",
+  protect,
+  deleteListing
 );
 
 router.get(

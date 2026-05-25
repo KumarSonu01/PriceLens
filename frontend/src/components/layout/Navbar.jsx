@@ -1,5 +1,4 @@
 import {
-  useEffect,
   useState,
 } from "react";
 
@@ -8,85 +7,129 @@ import {
   useSearchParams,
 } from "react-router-dom";
 
+import {
+  useDispatch,
+  useSelector,
+} from "react-redux";
+
+import {
+  logout,
+} from "../../features/auth/authSlice";
+
 const Navbar = () => {
   const navigate = useNavigate();
+
+  const dispatch = useDispatch();
 
   const [searchParams] =
     useSearchParams();
 
-  const currentKeyword =
+  const keywordFromUrl =
     searchParams.get("keyword") || "";
 
-  const sort =
-    searchParams.get("sort") || "";
-
-  const category =
-    searchParams.get("category") || "";
-
   const [keyword, setKeyword] =
-    useState(currentKeyword);
+    useState(keywordFromUrl);
 
-  useEffect(() => {
-    setKeyword(currentKeyword);
-  }, [currentKeyword]);
+  const authState = useSelector(
+    (state) => state.auth
+  );
+
+  const userInfo =
+    authState?.userInfo;
 
   const handleSearch = () => {
-    const params = {};
+    if (!keyword.trim()) {
+      navigate("/");
 
-    if (keyword.trim()) {
-      params.keyword = keyword;
+      return;
     }
 
-    if (sort) {
-      params.sort = sort;
-    }
+    navigate(
+      `/?keyword=${keyword}`
+    );
+  };
 
-    if (category) {
-      params.category = category;
-    }
+  const logoutHandler = () => {
+    dispatch(logout());
 
-    params.page = 1;
-
-    navigate({
-      pathname: "/",
-      search:
-        new URLSearchParams(
-          params
-        ).toString(),
-    });
+    navigate("/login");
   };
 
   return (
-    <nav className="bg-black text-white px-10 py-4 flex flex-col md:flex-row gap-5 md:justify-between md:items-center">
-      <h1
-        className="text-3xl font-bold cursor-pointer"
-        onClick={() => navigate("/")}
-      >
-        PriceLens
-      </h1>
-
-      <div className="flex gap-2 w-full md:w-auto">
-        <input
-          type="text"
-          placeholder="Search products..."
-          value={keyword}
-          onChange={(e) =>
-            setKeyword(e.target.value)
-          }
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              handleSearch();
-            }
-          }}
-          className="px-4 py-2 rounded text-black w-full md:w-96"
-        />
-
-        <button
-          onClick={handleSearch}
-          className="bg-green-600 px-5 py-2 rounded"
+    <nav className="bg-black text-white px-6 py-4">
+      <div className="max-w-7xl mx-auto flex items-center justify-between gap-5">
+        <h1
+          className="text-3xl font-bold cursor-pointer"
+          onClick={() => navigate("/")}
         >
-          Search
-        </button>
+          PriceLens
+        </h1>
+
+        <div className="flex flex-1 max-w-xl gap-2">
+          <input
+            type="text"
+            placeholder="Search products..."
+            value={keyword}
+            onChange={(e) =>
+              setKeyword(e.target.value)
+            }
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleSearch();
+              }
+            }}
+            className="flex-1 px-4 py-2 rounded text-black"
+          />
+
+          <button
+            onClick={handleSearch}
+            className="bg-green-600 px-5 py-2 rounded"
+          >
+            Search
+          </button>
+        </div>
+
+        <div className="flex gap-3 items-center">
+          {userInfo ? (
+            <>
+              <button
+                onClick={() =>
+                  navigate(
+                    "/seller/dashboard"
+                  )
+                }
+                className="bg-green-600 px-4 py-2 rounded"
+              >
+                Dashboard
+              </button>
+
+              <button
+                onClick={() =>
+                  navigate("/profile")
+                }
+                className="bg-white text-black px-4 py-2 rounded"
+              >
+                {userInfo.name}
+              </button>
+
+              <button
+                onClick={logoutHandler}
+                className="bg-red-600 px-4 py-2 rounded"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() =>
+                navigate("/login")
+              }
+              className="bg-white text-black px-4 py-2 rounded"
+            >
+              Login
+            </button>
+          )}
+        </div>
       </div>
     </nav>
   );

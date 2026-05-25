@@ -19,6 +19,8 @@ const listingSchema = Joi.object({
 
   deliveryInfo: Joi.string().allow(""),
 
+  offer: Joi.string().allow(""),
+
   productUrl: Joi.string().allow(""),
 
   rating: Joi.number(),

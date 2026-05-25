@@ -2,76 +2,96 @@ const asyncHandler = require("../middlewares/asyncHandler");
 
 const Listing = require("../models/Listing");
 
-const Seller = require("../models/Seller");
+const createListing = asyncHandler(
+  async (req, res) => {
+    const {
+      product,
+      source,
+      price,
+      deliveryInfo,
+      offer,
+    } = req.body;
 
-const Product = require("../models/Product");
+    const listing =
+      await Listing.create({
+        seller: req.user._id,
+        product,
+        source,
+        price,
+        deliveryInfo,
+        offer,
+      });
 
-const createListing = asyncHandler(async (req, res) => {
-  const {
-    product,
-    source,
-    price,
-    stock,
-    deliveryInfo,
-    productUrl,
-    rating,
-    reviewsCount,
-    images,
-    offers,
-  } = req.body;
-
-  const existingProduct = await Product.findById(product);
-
-  if (!existingProduct) {
-    res.status(404);
-
-    throw new Error("Product not found");
+    res.status(201).json(listing);
   }
+);
 
-  let sellerId = null;
+const getProductListings =
+  asyncHandler(async (req, res) => {
+    const listings =
+      await Listing.find({
+        product:
+          req.params.productId,
+      })
+        .populate(
+          "seller",
+          "shopName"
+        )
+        .sort({ price: 1 });
 
-  if (source === "local") {
-    const seller = await Seller.findOne({
-      user: req.user._id,
-    });
-
-    if (!seller) {
-      res.status(404);
-
-      throw new Error("Seller profile not found");
-    }
-
-    sellerId = seller._id;
-  }
-
-  const listing = await Listing.create({
-    product,
-    source,
-    seller: sellerId,
-    price,
-    stock,
-    deliveryInfo,
-    productUrl,
-    rating,
-    reviewsCount,
-    images,
-    offers,
+    res.status(200).json(listings);
   });
 
-  res.status(201).json(listing);
-});
+const getSellerListings =
+  asyncHandler(async (req, res) => {
+    const listings =
+      await Listing.find({
+        seller: req.user._id,
+      }).populate(
+        "product",
+        "title images"
+      );
 
-const getProductListings = asyncHandler(async (req, res) => {
-  const listings = await Listing.find({
-    product: req.params.productId,
-  })
-    .populate("seller")
-    .populate("product");
+    res.status(200).json(listings);
+  });
 
-  res.status(200).json(listings);
-});
+const deleteListing =
+  asyncHandler(async (req, res) => {
+    const listing =
+      await Listing.findById(
+        req.params.id
+      );
+
+    if (!listing) {
+      res.status(404);
+
+      throw new Error(
+        "Listing not found"
+      );
+    }
+
+    if (
+      listing.seller.toString() !==
+      req.user._id.toString()
+    ) {
+      res.status(401);
+
+      throw new Error(
+        "Not authorized"
+      );
+    }
+
+    await listing.deleteOne();
+
+    res.status(200).json({
+      message:
+        "Listing deleted",
+    });
+  });
 
 module.exports = {
   createListing,
   getProductListings,
+  getSellerListings,
+  deleteListing,
 };
