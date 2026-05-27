@@ -274,7 +274,7 @@ PriceLens aims to evolve from a simple price comparison platform into a complete
 
 # 👨‍💻 Developer
 
-Built by Ace 🚀
+Built by Sonu 🚀
 
 Computer Science Engineering Student  
 MERN Stack Developer  
