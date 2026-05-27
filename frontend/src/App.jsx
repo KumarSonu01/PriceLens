@@ -27,6 +27,8 @@ import SearchPage from "./pages/SearchPage";
 
 import AlertsPage from "./pages/AlertsPage";
 
+import WishlistPage from "./pages/WishlistPage";
+
 function App() {
   return (
     <Layout>
@@ -62,6 +64,11 @@ function App() {
           <Route
             path="/alerts"
             element={<AlertsPage />}
+          />
+
+          <Route
+            path="/wishlist"
+            element={<WishlistPage />}
           />
 
           <Route

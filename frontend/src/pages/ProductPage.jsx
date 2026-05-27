@@ -1,6 +1,19 @@
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
 
-import { useParams } from "react-router-dom";
+import {
+  useParams,
+} from "react-router-dom";
+
+import {
+  useSelector,
+} from "react-redux";
+
+import {
+  FaHeart,
+} from "react-icons/fa";
 
 import api from "../api/axios";
 
@@ -10,6 +23,11 @@ import PriceHistoryChart from "../components/product/PriceHistoryChart";
 
 const ProductPage = () => {
   const { id } = useParams();
+
+  const { userInfo } =
+    useSelector(
+      (state) => state.auth
+    );
 
   const [product, setProduct] =
     useState(null);
@@ -30,6 +48,16 @@ const ProductPage = () => {
     activeImage,
     setActiveImage,
   ] = useState(0);
+
+  const [
+    targetPrice,
+    setTargetPrice,
+  ] = useState("");
+
+  const [
+    wishlistLoading,
+    setWishlistLoading,
+  ] = useState(false);
 
   const lowestPrice =
     listings.length > 0
@@ -64,50 +92,114 @@ const ProductPage = () => {
       : 0;
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
+    const fetchData =
+      async () => {
+        try {
+          setLoading(true);
 
-        const [
-          productResponse,
-          listingsResponse,
-          historyResponse,
-        ] = await Promise.all([
-          api.get(`/products/${id}`),
+          const [
+            productResponse,
+            listingsResponse,
+            historyResponse,
+          ] =
+            await Promise.all([
+              api.get(
+                `/products/${id}`
+              ),
 
-          api.get(
-            `/listings/product/${id}`
-          ),
+              api.get(
+                `/listings/product/${id}`
+              ),
 
-          api.get(
-            `/products/${id}/price-history`
-          ),
-        ]);
+              api.get(
+                `/products/${id}/price-history`
+              ),
+            ]);
 
-        setProduct(
-          productResponse.data
-        );
+          setProduct(
+            productResponse.data
+          );
 
-        setListings(
-          listingsResponse.data
-        );
+          setListings(
+            listingsResponse.data
+          );
 
-        setPriceHistory(
-          historyResponse.data
-        );
-      } catch (error) {
-        console.log(error);
+          setPriceHistory(
+            historyResponse.data
+          );
+        } catch (error) {
+          console.log(error);
 
-        setError(
-          "Failed to load product details"
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
+          setError(
+            "Failed to load product details"
+          );
+        } finally {
+          setLoading(false);
+        }
+      };
 
     fetchData();
   }, [id]);
+
+  const createAlert =
+    async () => {
+      try {
+        await api.post(
+          "/price-alerts",
+          {
+            productId:
+              product._id,
+
+            targetPrice,
+          }
+        );
+
+        alert(
+          "Price alert created successfully"
+        );
+
+        setTargetPrice("");
+      } catch (error) {
+        console.log(error);
+
+        alert(
+          error?.response?.data
+            ?.message ||
+            "Failed to create alert"
+        );
+      }
+    };
+
+  const addToWishlist =
+    async () => {
+      try {
+        setWishlistLoading(
+          true
+        );
+
+        await api.post(
+          "/wishlist",
+          {
+            productId:
+              product._id,
+          }
+        );
+
+        alert(
+          "Added to wishlist"
+        );
+      } catch (error) {
+        alert(
+          error?.response?.data
+            ?.message ||
+            "Failed to add"
+        );
+      } finally {
+        setWishlistLoading(
+          false
+        );
+      }
+    };
 
   if (loading) {
     return (
@@ -212,7 +304,42 @@ const ProductPage = () => {
             {product.brand}
           </p>
 
-          <p className="text-gray-700 mt-6 leading-relaxed max-w-2xl">
+          <div className="flex flex-wrap gap-4 mt-6">
+            {lowestPrice && (
+              <div className="bg-green-100 text-green-700 px-5 py-3 rounded-xl font-bold">
+                Best Price: ₹
+                {lowestPrice.toLocaleString()}
+              </div>
+            )}
+
+            {marketAverage >
+              0 && (
+              <div className="bg-blue-100 text-blue-700 px-5 py-3 rounded-xl font-bold">
+                Avg: ₹
+                {marketAverage.toLocaleString()}
+              </div>
+            )}
+          </div>
+
+          {userInfo && (
+            <button
+              onClick={
+                addToWishlist
+              }
+              disabled={
+                wishlistLoading
+              }
+              className="mt-6 flex items-center gap-3 bg-red-500 hover:bg-red-600 transition text-white px-6 py-3 rounded-xl font-semibold"
+            >
+              <FaHeart />
+
+              {wishlistLoading
+                ? "Saving..."
+                : "Add To Wishlist"}
+            </button>
+          )}
+
+          <p className="text-gray-700 mt-8 leading-relaxed max-w-2xl">
             {
               product.description
             }
@@ -284,6 +411,39 @@ const ProductPage = () => {
           </div>
         </div>
       </div>
+
+      {userInfo && (
+        <div className="bg-white rounded-2xl shadow p-6 mt-16">
+          <h3 className="text-2xl font-bold mb-5">
+            Set Price Alert
+          </h3>
+
+          <div className="flex flex-col sm:flex-row gap-4">
+            <input
+              type="number"
+              placeholder="Enter target price"
+              value={
+                targetPrice
+              }
+              onChange={(e) =>
+                setTargetPrice(
+                  e.target.value
+                )
+              }
+              className="border border-gray-300 rounded-xl px-4 py-3 w-full outline-none focus:border-black"
+            />
+
+            <button
+              onClick={
+                createAlert
+              }
+              className="bg-black text-white px-6 py-3 rounded-xl hover:bg-gray-800 transition"
+            >
+              Notify Me
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="mt-16">
         <div className="mb-8">

@@ -32,6 +32,24 @@ const AlertsPage = () => {
     fetchAlerts();
   }, []);
 
+  const deleteAlert =
+    async (id) => {
+      try {
+        await api.delete(
+          `/price-alerts/${id}`
+        );
+
+        setAlerts((prev) =>
+          prev.filter(
+            (alert) =>
+              alert._id !== id
+          )
+        );
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-2xl font-semibold">
@@ -71,7 +89,7 @@ const AlertsPage = () => {
             (alert) => (
               <div
                 key={alert._id}
-                className={`bg-white rounded-2xl shadow p-6 border ${
+                className={`bg-white rounded-2xl shadow p-6 border transition ${
                   alert.isTriggered
                     ? "border-green-500"
                     : "border-gray-200"
@@ -106,10 +124,18 @@ const AlertsPage = () => {
                         ₹
                         {alert.targetPrice.toLocaleString()}
                       </p>
+
+                      <p className="text-sm text-gray-400 mt-2">
+                        Created:
+                        {" "}
+                        {new Date(
+                          alert.createdAt
+                        ).toLocaleDateString()}
+                      </p>
                     </div>
                   </div>
 
-                  <div>
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                     {alert.isTriggered ? (
                       <div className="bg-green-100 text-green-700 px-5 py-3 rounded-xl font-bold">
                         🎉 Price Dropped
@@ -119,6 +145,17 @@ const AlertsPage = () => {
                         Waiting For Drop
                       </div>
                     )}
+
+                    <button
+                      onClick={() =>
+                        deleteAlert(
+                          alert._id
+                        )
+                      }
+                      className="bg-red-600 hover:bg-red-700 transition text-white px-5 py-3 rounded-xl font-semibold"
+                    >
+                      Remove
+                    </button>
                   </div>
                 </div>
               </div>
