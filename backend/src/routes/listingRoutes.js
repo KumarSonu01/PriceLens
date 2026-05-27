@@ -1,6 +1,7 @@
 const express = require("express");
 
-const router = express.Router();
+const router =
+  express.Router();
 
 const {
   protect,
@@ -10,6 +11,7 @@ const {
   createListing,
   getProductListings,
   getSellerListings,
+  updateListing,
   deleteListing,
 } = require("../controllers/listingController");
 
@@ -25,15 +27,21 @@ router.get(
   getSellerListings
 );
 
+router.get(
+  "/product/:productId",
+  getProductListings
+);
+
+router.put(
+  "/:id",
+  protect,
+  updateListing
+);
+
 router.delete(
   "/:id",
   protect,
   deleteListing
-);
-
-router.get(
-  "/product/:productId",
-  getProductListings
 );
 
 module.exports = router;

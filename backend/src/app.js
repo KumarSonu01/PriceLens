@@ -6,6 +6,7 @@ const authRoutes = require("./routes/authRoutes");
 const sellerRoutes = require("./routes/sellerRoutes");
 const productRoutes = require("./routes/productRoutes");
 const listingRoutes = require("./routes/listingRoutes");
+const priceAlertRoutes = require("./routes/priceAlertRoutes");
 
 const {
   notFound,
@@ -31,6 +32,8 @@ app.use("/api/sellers", sellerRoutes);
 app.use("/api/products", productRoutes);
 
 app.use("/api/listings", listingRoutes);
+
+app.use("/api/price-alerts", priceAlertRoutes);
 
 app.use(notFound);
 

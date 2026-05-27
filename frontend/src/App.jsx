@@ -23,6 +23,10 @@ import AddListingPage from "./pages/AddListingPage";
 
 import ManageListingsPage from "./pages/ManageListingsPage";
 
+import SearchPage from "./pages/SearchPage";
+
+import AlertsPage from "./pages/AlertsPage";
+
 function App() {
   return (
     <Layout>
@@ -43,11 +47,21 @@ function App() {
         />
 
         <Route
+          path="/search"
+          element={<SearchPage />}
+        />
+
+        <Route
           element={<ProtectedRoute />}
         >
           <Route
             path="/profile"
             element={<ProfilePage />}
+          />
+
+          <Route
+            path="/alerts"
+            element={<AlertsPage />}
           />
 
           <Route
