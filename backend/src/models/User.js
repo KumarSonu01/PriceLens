@@ -24,13 +24,54 @@ const userSchema = new mongoose.Schema(
 
     role: {
       type: String,
-      enum: ["user", "seller", "admin"],
-      default: "user",
+
+      enum: [
+        "buyer",
+        "online_seller",
+        "local_seller",
+        "admin",
+      ],
+
+      default: "buyer",
     },
 
     avatar: {
       type: String,
       default: "",
+    },
+
+    shopName: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    shopAddress: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    city: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    phone: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    deliveryRadius: {
+      type: Number,
+      default: 0,
+    },
+
+    isVerified: {
+      type: Boolean,
+      default: false,
     },
   },
   {
@@ -38,6 +79,9 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-const User = mongoose.model("User", userSchema);
+const User = mongoose.model(
+  "User",
+  userSchema
+);
 
 module.exports = User;

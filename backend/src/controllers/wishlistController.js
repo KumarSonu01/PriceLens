@@ -63,6 +63,30 @@ const getWishlist =
     );
   });
 
+const checkWishlist =
+  asyncHandler(async (req, res) => {
+    const wishlist =
+      await Wishlist.findOne({
+        user: req.user._id,
+
+        product:
+          req.params.productId,
+      });
+
+    if (wishlist) {
+      return res.json({
+        exists: true,
+
+        wishlistId:
+          wishlist._id,
+      });
+    }
+
+    res.json({
+      exists: false,
+    });
+  });
+
 const removeFromWishlist =
   asyncHandler(async (req, res) => {
     const wishlist =
@@ -101,6 +125,8 @@ module.exports = {
   addToWishlist,
 
   getWishlist,
+
+  checkWishlist,
 
   removeFromWishlist,
 };

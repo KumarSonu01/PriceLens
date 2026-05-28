@@ -22,6 +22,9 @@ const priceAlertRoutes =
 const wishlistRoutes =
   require("./routes/wishlistRoutes");
 
+const uploadRoutes =
+  require("./routes/uploadRoutes");
+
 const {
   notFound,
   errorHandler,
@@ -69,6 +72,11 @@ app.use(
 app.use(
   "/api/wishlist",
   wishlistRoutes
+);
+
+app.use(
+  "/api/upload",
+  uploadRoutes
 );
 
 app.use(notFound);

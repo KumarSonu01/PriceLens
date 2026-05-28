@@ -15,6 +15,8 @@ import {
   FaHeart,
 } from "react-icons/fa";
 
+import toast from "react-hot-toast";
+
 import api from "../api/axios";
 
 import ListingCard from "../components/listing/ListingCard";
@@ -58,6 +60,16 @@ const ProductPage = () => {
     wishlistLoading,
     setWishlistLoading,
   ] = useState(false);
+
+  const [
+    isWishlisted,
+    setIsWishlisted,
+  ] = useState(false);
+
+  const [
+    wishlistId,
+    setWishlistId,
+  ] = useState(null);
 
   const lowestPrice =
     listings.length > 0
@@ -127,11 +139,34 @@ const ProductPage = () => {
           setPriceHistory(
             historyResponse.data
           );
+
+          if (userInfo) {
+            const wishlistResponse =
+              await api.get(
+                `/wishlist/check/${id}`
+              );
+
+            setIsWishlisted(
+              wishlistResponse
+                .data.exists
+            );
+
+            setWishlistId(
+              wishlistResponse
+                .data
+                .wishlistId ||
+                null
+            );
+          }
         } catch (error) {
           console.log(error);
 
           setError(
             "Failed to load product details"
+          );
+
+          toast.error(
+            "Failed to load product"
           );
         } finally {
           setLoading(false);
@@ -139,7 +174,7 @@ const ProductPage = () => {
       };
 
     fetchData();
-  }, [id]);
+  }, [id, userInfo]);
 
   const createAlert =
     async () => {
@@ -154,15 +189,15 @@ const ProductPage = () => {
           }
         );
 
-        alert(
-          "Price alert created successfully"
+        toast.success(
+          "Price alert created"
         );
 
         setTargetPrice("");
       } catch (error) {
         console.log(error);
 
-        alert(
+        toast.error(
           error?.response?.data
             ?.message ||
             "Failed to create alert"
@@ -170,29 +205,54 @@ const ProductPage = () => {
       }
     };
 
-  const addToWishlist =
+  const toggleWishlist =
     async () => {
       try {
         setWishlistLoading(
           true
         );
 
-        await api.post(
-          "/wishlist",
-          {
-            productId:
-              product._id,
-          }
-        );
+        if (isWishlisted) {
+          await api.delete(
+            `/wishlist/${wishlistId}`
+          );
 
-        alert(
-          "Added to wishlist"
-        );
+          setIsWishlisted(
+            false
+          );
+
+          setWishlistId(null);
+
+          toast.success(
+            "Removed from wishlist"
+          );
+        } else {
+          const { data } =
+            await api.post(
+              "/wishlist",
+              {
+                productId:
+                  product._id,
+              }
+            );
+
+          setIsWishlisted(
+            true
+          );
+
+          setWishlistId(
+            data._id
+          );
+
+          toast.success(
+            "Added to wishlist"
+          );
+        }
       } catch (error) {
-        alert(
-          error?.response?.data
-            ?.message ||
-            "Failed to add"
+        console.log(error);
+
+        toast.error(
+          "Wishlist action failed"
         );
       } finally {
         setWishlistLoading(
@@ -324,17 +384,23 @@ const ProductPage = () => {
           {userInfo && (
             <button
               onClick={
-                addToWishlist
+                toggleWishlist
               }
               disabled={
                 wishlistLoading
               }
-              className="mt-6 flex items-center gap-3 bg-red-500 hover:bg-red-600 transition text-white px-6 py-3 rounded-xl font-semibold"
+              className={`mt-6 flex items-center gap-3 transition text-white px-6 py-3 rounded-xl font-semibold ${
+                isWishlisted
+                  ? "bg-pink-600 hover:bg-pink-700"
+                  : "bg-red-500 hover:bg-red-600"
+              }`}
             >
               <FaHeart />
 
               {wishlistLoading
                 ? "Saving..."
+                : isWishlisted
+                ? "Wishlisted"
                 : "Add To Wishlist"}
             </button>
           )}

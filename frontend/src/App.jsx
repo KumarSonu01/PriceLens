@@ -13,6 +13,8 @@ import ProductPage from "./pages/ProductPage";
 
 import LoginPage from "./pages/LoginPage";
 
+import RegisterPage from "./pages/RegisterPage";
+
 import ProfilePage from "./pages/ProfilePage";
 
 import SellerPage from "./pages/SellerPage";
@@ -40,7 +42,9 @@ function App() {
 
         <Route
           path="/product/:id"
-          element={<ProductPage />}
+          element={
+            <ProductPage />
+          }
         />
 
         <Route
@@ -49,31 +53,48 @@ function App() {
         />
 
         <Route
+          path="/register"
+          element={
+            <RegisterPage />
+          }
+        />
+
+        <Route
           path="/search"
           element={<SearchPage />}
         />
 
         <Route
-          element={<ProtectedRoute />}
+          element={
+            <ProtectedRoute />
+          }
         >
           <Route
             path="/profile"
-            element={<ProfilePage />}
+            element={
+              <ProfilePage />
+            }
           />
 
           <Route
             path="/alerts"
-            element={<AlertsPage />}
+            element={
+              <AlertsPage />
+            }
           />
 
           <Route
             path="/wishlist"
-            element={<WishlistPage />}
+            element={
+              <WishlistPage />
+            }
           />
 
           <Route
             path="/seller/dashboard"
-            element={<SellerPage />}
+            element={
+              <SellerPage />
+            }
           />
 
           <Route

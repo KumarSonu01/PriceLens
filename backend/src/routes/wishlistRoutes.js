@@ -10,6 +10,7 @@ const {
 const {
   addToWishlist,
   getWishlist,
+  checkWishlist,
   removeFromWishlist,
 } = require("../controllers/wishlistController");
 
@@ -23,6 +24,12 @@ router.get(
   "/",
   protect,
   getWishlist
+);
+
+router.get(
+  "/check/:productId",
+  protect,
+  checkWishlist
 );
 
 router.delete(

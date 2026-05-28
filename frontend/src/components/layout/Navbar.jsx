@@ -114,8 +114,12 @@ const Navbar = () => {
               </>
             )}
 
-            {userInfo?.role ===
-              "seller" && (
+            {(userInfo?.role ===
+              "online_seller" ||
+              userInfo?.role ===
+                "local_seller" ||
+              userInfo?.role ===
+                "admin") && (
               <Link
                 to="/seller/dashboard"
                 className="bg-green-600 hover:bg-green-700 transition px-5 py-3 rounded-2xl font-medium"
@@ -130,11 +134,23 @@ const Navbar = () => {
                   to="/profile"
                   className="bg-white/10 hover:bg-white/20 transition px-3 py-2 rounded-2xl font-medium flex items-center gap-3"
                 >
-                  <div className="w-9 h-9 rounded-full bg-white text-black flex items-center justify-center font-bold">
-                    {userInfo.name
-                      ?.charAt(0)
-                      ?.toUpperCase()}
-                  </div>
+                  {userInfo?.avatar ? (
+                    <img
+                      src={
+                        userInfo.avatar
+                      }
+                      alt={
+                        userInfo.name
+                      }
+                      className="w-10 h-10 rounded-full object-cover border border-white"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center font-bold">
+                      {userInfo.name
+                        ?.charAt(0)
+                        ?.toUpperCase()}
+                    </div>
+                  )}
 
                   <span className="hidden sm:block">
                     {
