@@ -23,6 +23,8 @@ import PriceHistoryChart from "../components/product/PriceHistoryChart";
 
 import ProductHero from "../components/product/ProductHero";
 
+import ComparisonTable from "../components/product/ComparisonTable";
+
 const ProductPage = () => {
   const { id } = useParams();
 
@@ -408,9 +410,12 @@ const ProductPage = () => {
 
       <div className="mt-16">
         <div className="mb-8">
-          <h2 className="text-3xl font-bold">
-            Compare Prices
-          </h2>
+          <ComparisonTable
+            listings={listings}
+            marketAverage={marketAverage}
+            bestListingId={bestListingId}
+          />
+          
 
           <div className="flex flex-wrap gap-4 mt-4">
             {lowestPrice && (

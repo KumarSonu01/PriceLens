@@ -100,9 +100,9 @@ const getProductListings =
           req.params.productId,
       })
         .populate(
-          "seller",
-          "name email"
-        )
+        "seller",
+        "name email shopName city avatar role"
+      )
         .sort({ price: 1 });
 
     res.status(200).json(

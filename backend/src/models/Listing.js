@@ -13,17 +13,9 @@ const listingSchema =
       },
 
       source: {
-        type: String,
-
-        required: true,
-
-        enum: [
-          "amazon",
-          "flipkart",
-          "blinkit",
-          "zepto",
-          "local",
-        ],
+      type: String,
+      required: true,
+      trim: true,
       },
 
       seller: {
