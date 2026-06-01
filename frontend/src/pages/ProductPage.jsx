@@ -25,6 +25,8 @@ import ProductHero from "../components/product/ProductHero";
 
 import ComparisonTable from "../components/product/ComparisonTable";
 
+import RelatedProducts from "../components/product/RelatedProducts";
+
 const ProductPage = () => {
   const { id } = useParams();
 
@@ -40,6 +42,9 @@ const ProductPage = () => {
     useState([]);
 
   const [priceHistory, setPriceHistory] =
+    useState([]);
+
+  const [relatedProducts, setRelatedProducts,] =
     useState([]);
 
   const [loading, setLoading] =
@@ -115,18 +120,23 @@ const ProductPage = () => {
             productResponse,
             listingsResponse,
             historyResponse,
+            relatedResponse,
           ] =
             await Promise.all([
               api.get(
                 `/products/${id}`
               ),
-
+          
               api.get(
                 `/listings/product/${id}`
               ),
-
+          
               api.get(
                 `/products/${id}/price-history`
+              ),
+          
+              api.get(
+                `/products/${id}/related`
               ),
             ]);
 
@@ -140,6 +150,10 @@ const ProductPage = () => {
 
           setPriceHistory(
             historyResponse.data
+          );
+
+          setRelatedProducts(
+            relatedResponse.data
           );
 
           if (userInfo) {
@@ -487,6 +501,12 @@ const ProductPage = () => {
       <div className="mt-16">
         <PriceHistoryChart
           data={priceHistory}
+        />
+      </div>
+
+      <div className="mt-16">
+        <RelatedProducts
+          products={relatedProducts}
         />
       </div>
     </div>

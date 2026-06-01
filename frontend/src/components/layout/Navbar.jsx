@@ -115,13 +115,16 @@ const Navbar = () => {
             )}
 
             {(userInfo?.role ===
-              "online_seller" ||
-              userInfo?.role ===
                 "local_seller" ||
               userInfo?.role ===
                 "admin") && (
               <Link
-                to="/seller/dashboard"
+                to={
+                  userInfo?.role ===
+                  "admin"
+                    ? "/admin/dashboard"
+                    : "/seller/dashboard"
+                }
                 className="bg-green-600 hover:bg-green-700 transition px-5 py-3 rounded-2xl font-medium"
               >
                 Dashboard

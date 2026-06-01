@@ -216,9 +216,157 @@ const getPriceHistory =
     );
   });
 
+const getRelatedProducts =
+  asyncHandler(async (req, res) => {
+    const currentProduct =
+      await Product.findById(
+        req.params.id
+      );
+
+    if (!currentProduct) {
+      res.status(404);
+
+      throw new Error(
+        "Product not found"
+      );
+    }
+
+    const relatedProducts =
+      await Product.find({
+        _id: {
+          $ne:
+            currentProduct._id,
+        },
+
+        category:
+          currentProduct.category,
+      })
+        .sort({
+          createdAt: -1,
+        })
+        .limit(4);
+
+    
+
+    const productsWithPrices =
+      await Promise.all(
+        relatedProducts.map(
+          async (product) => {
+            const listing =
+              await Listing.findOne(
+                {
+                  product:
+                    product._id,
+                }
+              ).sort({
+                price: 1,
+              });
+
+            return {
+              ...product.toObject(),
+
+              lowestPrice:
+                listing
+                  ? listing.price
+                  : null,
+            };
+          }
+        )
+      );
+
+    res.status(200).json(
+      productsWithPrices
+    );
+  });
+
+  const deleteProduct =
+  asyncHandler(async (req, res) => {
+    const product =
+      await Product.findById(
+        req.params.id
+      );
+
+    if (!product) {
+      res.status(404);
+
+      throw new Error(
+        "Product not found"
+      );
+    }
+
+    await Listing.deleteMany({
+      product: product._id,
+    });
+
+    await PriceHistory.deleteMany({
+      product: product._id,
+    });
+
+    await product.deleteOne();
+
+    res.status(200).json({
+      message:
+        "Product deleted successfully",
+    });
+  });
+
+  const updateProduct =
+  asyncHandler(async (req, res) => {
+    const product =
+      await Product.findById(
+        req.params.id
+      );
+
+    if (!product) {
+      res.status(404);
+
+      throw new Error(
+        "Product not found"
+      );
+    }
+
+    product.title =
+      req.body.title ||
+      product.title;
+
+    product.brand =
+      req.body.brand ||
+      product.brand;
+
+    product.category =
+      req.body.category ||
+      product.category;
+
+    product.description =
+      req.body.description ||
+      product.description;
+
+    product.specifications =
+      req.body.specifications ||
+      product.specifications;
+
+    product.features =
+      req.body.features ||
+      product.features;
+
+    product.images =
+      req.body.images ||
+      product.images;
+
+    const updatedProduct =
+      await product.save();
+
+    res.status(200).json(
+      updatedProduct
+    );
+  });
+
 module.exports = {
   createProduct,
   getProducts,
   getSingleProduct,
   getPriceHistory,
+  getRelatedProducts,
+  deleteProduct,
+  updateProduct,
 };

@@ -48,8 +48,6 @@ const LoginPage = () => {
     if (userInfo) {
       if (
         userInfo.role ===
-          "online_seller" ||
-        userInfo.role ===
           "local_seller"
       ) {
         navigate(
@@ -86,8 +84,6 @@ const LoginPage = () => {
         );
 
         if (
-          data.role ===
-            "online_seller" ||
           data.role ===
             "local_seller"
         ) {

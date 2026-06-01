@@ -6,29 +6,30 @@ import {
 import Layout from "./components/layout/Layout";
 
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import AdminRoute from "./components/auth/AdminRoute";
+import SellerRoute from "./components/auth/SellerRoute";
 
 import Home from "./pages/Home";
-
 import ProductPage from "./pages/ProductPage";
-
 import LoginPage from "./pages/LoginPage";
-
 import RegisterPage from "./pages/RegisterPage";
-
 import ProfilePage from "./pages/ProfilePage";
 
 import SellerPage from "./pages/SellerPage";
+import AdminPage from "./pages/AdminPage";
 
 import AddProductPage from "./pages/AddProductPage";
-
 import AddListingPage from "./pages/AddListingPage";
 
 import ManageListingsPage from "./pages/ManageListingsPage";
+import ManageProductsPage from "./pages/ManageProductsPage";
+
+import AdminListingsPage from "./pages/AdminListingsPage";
+
+import EditProductPage from "./pages/EditProductPage";
 
 import SearchPage from "./pages/SearchPage";
-
 import AlertsPage from "./pages/AlertsPage";
-
 import WishlistPage from "./pages/WishlistPage";
 
 function App() {
@@ -42,9 +43,7 @@ function App() {
 
         <Route
           path="/product/:id"
-          element={
-            <ProductPage />
-          }
+          element={<ProductPage />}
         />
 
         <Route
@@ -54,9 +53,7 @@ function App() {
 
         <Route
           path="/register"
-          element={
-            <RegisterPage />
-          }
+          element={<RegisterPage />}
         />
 
         <Route
@@ -64,58 +61,64 @@ function App() {
           element={<SearchPage />}
         />
 
-        <Route
-          element={
-            <ProtectedRoute />
-          }
-        >
+        <Route element={<ProtectedRoute />}>
           <Route
             path="/profile"
-            element={
-              <ProfilePage />
-            }
+            element={<ProfilePage />}
           />
 
           <Route
             path="/alerts"
-            element={
-              <AlertsPage />
-            }
+            element={<AlertsPage />}
           />
 
           <Route
             path="/wishlist"
-            element={
-              <WishlistPage />
-            }
+            element={<WishlistPage />}
           />
+        </Route>
 
+        <Route element={<SellerRoute />}>
           <Route
             path="/seller/dashboard"
-            element={
-              <SellerPage />
-            }
-          />
-
-          <Route
-            path="/seller/add-product"
-            element={
-              <AddProductPage />
-            }
+            element={<SellerPage />}
           />
 
           <Route
             path="/seller/add-listing"
-            element={
-              <AddListingPage />
-            }
+            element={<AddListingPage />}
           />
 
           <Route
             path="/seller/manage-listings"
-            element={
-              <ManageListingsPage />
-            }
+            element={<ManageListingsPage />}
+          />
+        </Route>
+
+        <Route element={<AdminRoute />}>
+          <Route
+            path="/admin/dashboard"
+            element={<AdminPage />}
+          />
+
+          <Route
+            path="/admin/add-product"
+            element={<AddProductPage />}
+          />
+
+          <Route
+            path="/admin/manage-products"
+            element={<ManageProductsPage />}
+          />
+
+          <Route
+            path="/admin/edit-product/:id"
+            element={<EditProductPage />}
+          />
+
+          <Route
+            path="/admin/listings"
+            element={<AdminListingsPage />}
           />
         </Route>
       </Routes>

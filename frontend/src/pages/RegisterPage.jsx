@@ -192,8 +192,6 @@ const RegisterPage = () => {
 
         if (
           data.role ===
-            "online_seller" ||
-          data.role ===
             "local_seller"
         ) {
           navigate(
@@ -384,23 +382,6 @@ const RegisterPage = () => {
                   type="button"
                   onClick={() =>
                     setRole(
-                      "online_seller"
-                    )
-                  }
-                  className={`border rounded-2xl p-4 ${
-                    role ===
-                    "online_seller"
-                      ? "bg-black text-white"
-                      : "bg-white"
-                  }`}
-                >
-                  🌐 Online Seller
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    setRole(
                       "local_seller"
                     )
                   }
@@ -413,7 +394,7 @@ const RegisterPage = () => {
                 >
                   🏪 Local Seller
                 </button>
-
+                
                 <button
                   type="button"
                   onClick={() =>

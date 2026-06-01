@@ -61,16 +61,9 @@ const SellerPage = () => {
         </h2>
 
         <div className="flex flex-wrap gap-5">
-          <button
-            onClick={() =>
-              navigate(
-                "/seller/add-product"
-              )
-            }
-            className="bg-black text-white px-6 py-3 rounded"
-          >
-            Add Product
-          </button>
+          
+
+          
 
           <button
             onClick={() =>
@@ -78,7 +71,7 @@ const SellerPage = () => {
                 "/seller/add-listing"
               )
             }
-            className="bg-green-600 text-white px-6 py-3 rounded"
+            className="bg-green-600 text-white px-6 py-3 rounded hover:bg-green-700 transition"
           >
             Add Listing
           </button>
@@ -89,7 +82,7 @@ const SellerPage = () => {
                 "/seller/manage-listings"
               )
             }
-            className="bg-blue-600 text-white px-6 py-3 rounded"
+            className="bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700 transition"
           >
             Manage Listings
           </button>

@@ -21,14 +21,14 @@ const AddListingPage = () => {
   const [price, setPrice] =
     useState("");
 
-  const [source, setSource] =
-    useState("");
-
   const [deliveryInfo, setDeliveryInfo] =
     useState("");
 
   const [offer, setOffer] =
     useState("");
+
+  const [stock, setStock] =
+    useState(true);
 
   const [loading, setLoading] =
     useState(false);
@@ -37,53 +37,70 @@ const AddListingPage = () => {
     useState("");
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const { data } =
-          await api.get("/products");
+    const fetchProducts =
+      async () => {
+        try {
+          const { data } =
+            await api.get(
+              "/products"
+            );
 
-        setProducts(data.products);
-      } catch (err) {
-        console.log(err);
-      }
-    };
+          setProducts(
+            data.products
+          );
+        } catch (err) {
+          console.log(err);
+        }
+      };
 
     fetchProducts();
   }, []);
 
-const submitHandler = async (e) => {
-  e.preventDefault();
+  const submitHandler =
+    async (e) => {
+      e.preventDefault();
 
-  try {
-    setLoading(true);
+      try {
+        setLoading(true);
 
-    setError("");
+        setError("");
 
-    const listingData = {
-      product: productId,
-      price,
-      source,
-      deliveryInfo,
-      offer,
+        const listingData = {
+          product:
+            productId,
+
+          price,
+
+          deliveryInfo,
+
+          offer,
+
+          stock,
+
+          source:
+            "Local Seller",
+        };
+
+        await api.post(
+          "/listings",
+          listingData
+        );
+
+        navigate(
+          "/seller/dashboard"
+        );
+      } catch (err) {
+        console.log(err);
+
+        setError(
+          err.response?.data
+            ?.message ||
+            "Something went wrong"
+        );
+      } finally {
+        setLoading(false);
+      }
     };
-
-    await api.post(
-      "/listings",
-      listingData
-    );
-
-    navigate("/seller/dashboard");
-  } catch (err) {
-    console.log(err);
-
-    setError(
-      err.response?.data?.message ||
-        "Something went wrong"
-    );
-  } finally {
-    setLoading(false);
-  }
-};
 
   return (
     <div className="max-w-3xl mx-auto p-10">
@@ -98,7 +115,9 @@ const submitHandler = async (e) => {
       )}
 
       <form
-        onSubmit={submitHandler}
+        onSubmit={
+          submitHandler
+        }
         className="bg-white p-8 rounded-lg shadow space-y-5"
       >
         <div>
@@ -120,32 +139,23 @@ const submitHandler = async (e) => {
               Choose Product
             </option>
 
-            {products.map((product) => (
-              <option
-                key={product._id}
-                value={product._id}
-              >
-                {product.title}
-              </option>
-            ))}
+            {products.map(
+              (product) => (
+                <option
+                  key={
+                    product._id
+                  }
+                  value={
+                    product._id
+                  }
+                >
+                  {
+                    product.title
+                  }
+                </option>
+              )
+            )}
           </select>
-        </div>
-
-        <div>
-          <label className="block mb-2 font-semibold">
-            Source
-          </label>
-
-          <input
-            type="text"
-            value={source}
-            onChange={(e) =>
-              setSource(e.target.value)
-            }
-            placeholder="Amazon, Flipkart..."
-            required
-            className="w-full border p-3 rounded"
-          />
         </div>
 
         <div>
@@ -157,7 +167,9 @@ const submitHandler = async (e) => {
             type="number"
             value={price}
             onChange={(e) =>
-              setPrice(e.target.value)
+              setPrice(
+                e.target.value
+              )
             }
             required
             className="w-full border p-3 rounded"
@@ -177,6 +189,7 @@ const submitHandler = async (e) => {
                 e.target.value
               )
             }
+            placeholder="Within 2 Hours"
             required
             className="w-full border p-3 rounded"
           />
@@ -191,16 +204,44 @@ const submitHandler = async (e) => {
             type="text"
             value={offer}
             onChange={(e) =>
-              setOffer(e.target.value)
+              setOffer(
+                e.target.value
+              )
             }
+            placeholder="Free Screen Guard"
             className="w-full border p-3 rounded"
           />
+        </div>
+
+        <div>
+          <label className="block mb-2 font-semibold">
+            Stock Status
+          </label>
+
+          <select
+            value={stock}
+            onChange={(e) =>
+              setStock(
+                e.target.value ===
+                  "true"
+              )
+            }
+            className="w-full border p-3 rounded"
+          >
+            <option value="true">
+              In Stock
+            </option>
+
+            <option value="false">
+              Out of Stock
+            </option>
+          </select>
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="bg-green-600 text-white px-6 py-3 rounded"
+          className="bg-green-600 text-white px-6 py-3 rounded hover:bg-green-700 transition"
         >
           {loading
             ? "Creating..."

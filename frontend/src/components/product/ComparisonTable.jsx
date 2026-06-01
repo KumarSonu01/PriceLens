@@ -20,15 +20,15 @@ const ComparisonTable = ({
               </th>
 
               <th className="p-4 text-left">
-                City
-              </th>
-
-              <th className="p-4 text-left">
                 Type
               </th>
 
               <th className="p-4 text-left">
                 Price
+              </th>
+
+              <th className="p-4 text-left">
+                Delivery
               </th>
 
               <th className="p-4 text-left">
@@ -85,17 +85,9 @@ const ComparisonTable = ({
                     </div>
                   </td>
 
-                  <td className="p-4">
-                    {listing
-                      ?.seller
-                      ?.city || "-"}
-                  </td>
-
                   <td className="p-4 capitalize">
-                    {listing
-                      ?.seller
-                      ?.role
-                      ?.replace(
+                    {listing?.seller?.role
+                      ?.replaceAll(
                         "_",
                         " "
                       ) || "-"}
@@ -107,14 +99,27 @@ const ComparisonTable = ({
                   </td>
 
                   <td className="p-4">
-                    {listing.stock}
+                    {listing.deliveryInfo ||
+                      "Not specified"}
+                  </td>
+
+                  <td className="p-4">
+                    {listing.stock ? (
+                      <span className="text-green-600 font-semibold">
+                        🟢 In Stock
+                      </span>
+                    ) : (
+                      <span className="text-red-600 font-semibold">
+                        🔴 Out of Stock
+                      </span>
+                    )}
                   </td>
 
                   <td className="p-4">
                     {listing._id ===
                     bestListingId ? (
                       <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-semibold">
-                        Best Deal
+                        🏆 Best Deal
                       </span>
                     ) : (
                       <span className="text-gray-500">

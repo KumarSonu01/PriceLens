@@ -1,11 +1,23 @@
-import { useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
 
-import { useNavigate } from "react-router-dom";
+import {
+  useNavigate,
+  useParams,
+} from "react-router-dom";
+
+import toast from "react-hot-toast";
 
 import api from "../api/axios";
 
-const AddProductPage = () => {
-  const navigate = useNavigate();
+const EditProductPage = () => {
+  const { id } =
+    useParams();
+
+  const navigate =
+    useNavigate();
 
   const [title, setTitle] =
     useState("");
@@ -16,8 +28,10 @@ const AddProductPage = () => {
   const [category, setCategory] =
     useState("");
 
-  const [description, setDescription] =
-    useState("");
+  const [
+    description,
+    setDescription,
+  ] = useState("");
 
   const [ram, setRam] =
     useState("");
@@ -25,79 +39,159 @@ const AddProductPage = () => {
   const [storage, setStorage] =
     useState("");
 
-  const [features, setFeatures] =
-    useState("");
+  const [
+    features,
+    setFeatures,
+  ] = useState("");
 
   const [image, setImage] =
     useState("");
 
   const [loading, setLoading] =
+    useState(true);
+
+  const [saving, setSaving] =
     useState(false);
 
-  const [error, setError] =
-    useState("");
+  useEffect(() => {
+    const fetchProduct =
+      async () => {
+        try {
+          const { data } =
+            await api.get(
+              `/products/${id}`
+            );
 
-  const submitHandler = async (e) => {
-    e.preventDefault();
+          setTitle(
+            data.title
+          );
 
-    try {
-      setLoading(true);
+          setBrand(
+            data.brand
+          );
 
-      setError("");
+          setCategory(
+            data.category
+          );
 
-      const productData = {
-        title,
-        brand,
-        category,
-        description,
+          setDescription(
+            data.description
+          );
 
-        images: [image],
+          setRam(
+            data
+              ?.specifications
+              ?.RAM || ""
+          );
 
-        specifications: {
-          RAM: ram,
-          Storage: storage,
-        },
+          setStorage(
+            data
+              ?.specifications
+              ?.Storage || ""
+          );
 
-        features: features
-          .split(",")
-          .map((feature) =>
-            feature.trim()
-          )
-          .filter(Boolean),
+          setFeatures(
+            data.features?.join(
+              ", "
+            ) || ""
+          );
+
+          setImage(
+            data
+              ?.images?.[0] ||
+              ""
+          );
+        } catch (error) {
+          console.log(error);
+
+          toast.error(
+            "Failed to load product"
+          );
+        } finally {
+          setLoading(
+            false
+          );
+        }
       };
 
-      await api.post(
-        "/products",
-        productData
-      );
+    fetchProduct();
+  }, [id]);
 
-      navigate(
-        "/seller/dashboard"
-      );
-    } catch (err) {
-      console.log(err);
+  const submitHandler =
+    async (e) => {
+      e.preventDefault();
 
-      setError(
-        err.response?.data
-          ?.message ||
-          "Something went wrong"
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+      try {
+        setSaving(true);
+
+        await api.put(
+          `/products/${id}`,
+          {
+            title,
+            brand,
+            category,
+            description,
+
+            specifications:
+              {
+                RAM: ram,
+                Storage:
+                  storage,
+              },
+
+            features:
+              features
+                .split(",")
+                .map(
+                  (
+                    feature
+                  ) =>
+                    feature.trim()
+                )
+                .filter(
+                  Boolean
+                ),
+
+            images: [image],
+          }
+        );
+
+        toast.success(
+          "Product updated successfully"
+        );
+
+        navigate(
+            "/admin/manage-products"
+        );
+      } catch (error) {
+        console.log(error);
+
+        toast.error(
+          error?.response
+            ?.data
+            ?.message ||
+            "Failed to update product"
+        );
+      } finally {
+        setSaving(
+          false
+        );
+      }
+    };
+
+  if (loading) {
+    return (
+      <div className="p-10 text-xl font-semibold">
+        Loading Product...
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-3xl mx-auto p-10">
       <h1 className="text-4xl font-bold mb-8">
-        Add Product
+        Edit Product
       </h1>
-
-      {error && (
-        <div className="bg-red-100 text-red-700 p-4 rounded mb-5">
-          {error}
-        </div>
-      )}
 
       <form
         onSubmit={
@@ -229,7 +323,6 @@ const AddProductPage = () => {
                 e.target.value
               )
             }
-            placeholder="8GB"
             className="w-full border p-3 rounded"
           />
         </div>
@@ -247,7 +340,6 @@ const AddProductPage = () => {
                 e.target.value
               )
             }
-            placeholder="256GB"
             className="w-full border p-3 rounded"
           />
         </div>
@@ -265,7 +357,6 @@ const AddProductPage = () => {
                 e.target.value
               )
             }
-            placeholder="Flagship, Fast Charging, AMOLED"
             className="w-full border p-3 rounded"
           />
         </div>
@@ -290,16 +381,16 @@ const AddProductPage = () => {
 
         <button
           type="submit"
-          disabled={loading}
-          className="bg-black text-white px-6 py-3 rounded"
+          disabled={saving}
+          className="bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700 transition"
         >
-          {loading
-            ? "Creating..."
-            : "Create Product"}
+          {saving
+            ? "Updating..."
+            : "Update Product"}
         </button>
       </form>
     </div>
   );
 };
 
-export default AddProductPage;
+export default EditProductPage;

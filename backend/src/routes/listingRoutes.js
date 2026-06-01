@@ -14,6 +14,7 @@ const {
   createListing,
   getProductListings,
   getSellerListings,
+  getAllListings,
   updateListing,
   deleteListing,
 } = require("../controllers/listingController");
@@ -22,7 +23,6 @@ router.post(
   "/",
   protect,
   authorizeRoles(
-    "online_seller",
     "local_seller"
   ),
   createListing
@@ -32,10 +32,18 @@ router.get(
   "/my-listings",
   protect,
   authorizeRoles(
-    "online_seller",
     "local_seller"
   ),
   getSellerListings
+);
+
+router.get(
+  "/admin/all",
+  protect,
+  authorizeRoles(
+    "admin"
+  ),
+  getAllListings
 );
 
 router.get(
@@ -47,7 +55,6 @@ router.put(
   "/:id",
   protect,
   authorizeRoles(
-    "online_seller",
     "local_seller"
   ),
   updateListing
@@ -57,8 +64,8 @@ router.delete(
   "/:id",
   protect,
   authorizeRoles(
-    "online_seller",
-    "local_seller"
+    "local_seller",
+    "admin"
   ),
   deleteListing
 );

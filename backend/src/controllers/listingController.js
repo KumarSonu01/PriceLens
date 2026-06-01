@@ -41,9 +41,7 @@ const createListing =
     const existingListing =
       await Listing.findOne({
         product,
-
         source,
-
         seller: req.user._id,
       });
 
@@ -58,27 +56,18 @@ const createListing =
     const listing =
       await Listing.create({
         seller: req.user._id,
-
         product,
-
         source,
-
         price,
-
         stock,
-
         deliveryInfo,
-
         productUrl,
-
         offer,
       });
 
     await PriceHistory.create({
       product,
-
       listing: listing._id,
-
       price,
     });
 
@@ -100,9 +89,9 @@ const getProductListings =
           req.params.productId,
       })
         .populate(
-        "seller",
-        "name email shopName city avatar role"
-      )
+          "seller",
+          "name email shopName city avatar role"
+        )
         .sort({ price: 1 });
 
     res.status(200).json(
@@ -123,6 +112,30 @@ const getSellerListings =
     res.status(200).json(
       listings
     );
+  });
+
+const getAllListings =
+  asyncHandler(async (req, res) => {
+    const listings =
+      await Listing.find()
+        .populate(
+          "product",
+          "title images"
+        )
+        .populate(
+          "seller",
+          "name shopName email"
+        )
+        .sort({
+          createdAt: -1,
+        });
+
+    res.status(200).json({
+      success: true,
+      count:
+        listings.length,
+      listings,
+    });
   });
 
 const updateListing =
@@ -219,9 +232,17 @@ const deleteListing =
       );
     }
 
+    const isOwner =
+      listing.seller.toString() ===
+      req.user._id.toString();
+
+    const isAdmin =
+      req.user.role ===
+      "admin";
+
     if (
-      listing.seller.toString() !==
-      req.user._id.toString()
+      !isOwner &&
+      !isAdmin
     ) {
       res.status(401);
 
@@ -244,12 +265,9 @@ const deleteListing =
 
 module.exports = {
   createListing,
-
   getProductListings,
-
   getSellerListings,
-
+  getAllListings,
   updateListing,
-
   deleteListing,
 };
