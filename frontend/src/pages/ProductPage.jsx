@@ -51,6 +51,9 @@ const ProductPage = () => {
 
   const [loading, setLoading] =
     useState(true);
+  
+  const [refreshLoading,setRefreshLoading,] = 
+    useState(false);
 
   const [error, setError] =
     useState("");
@@ -279,6 +282,58 @@ const ProductPage = () => {
       }
     };
 
+  const refreshPrice =
+  async () => {
+    try {
+      setRefreshLoading(
+        true
+      );
+
+      const { data } =
+        await api.post(
+          `/admin/refresh-product/${id}`
+        );
+
+      const [
+        listingsResponse,
+        historyResponse,
+      ] = await Promise.all([
+        api.get(
+          `/listings/product/${id}`
+        ),
+
+        api.get(
+          `/products/${id}/price-history`
+        ),
+      ]);
+
+      setListings(
+        listingsResponse.data
+      );
+
+      setPriceHistory(
+        historyResponse.data
+      );
+
+      toast.success(
+        data.oldPrice !==
+          data.newPrice
+          ? `Price updated ₹${data.oldPrice} → ₹${data.newPrice}`
+          : "Price checked. No change."
+      );
+    } catch (error) {
+      console.log(error);
+
+      toast.error(
+        "Failed to refresh price"
+      );
+    } finally {
+      setRefreshLoading(
+        false
+      );
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-2xl font-semibold">
@@ -325,6 +380,25 @@ const ProductPage = () => {
       wishlistLoading={wishlistLoading}
       toggleWishlist={toggleWishlist}
     />    
+
+    {userInfo?.role ===
+      "admin" && (
+      <div className="mt-6">
+        <button
+          onClick={
+            refreshPrice
+          }
+          disabled={
+            refreshLoading
+          }
+          className="bg-green-600 text-white px-6 py-3 rounded-xl hover:bg-green-700 transition disabled:opacity-50"
+        >
+          {refreshLoading
+            ? "Refreshing..."
+            : "Refresh Price"}
+        </button>
+      </div>
+    )}
 
   <div className="mt-10">
     <h2 className="text-2xl font-bold mb-5">

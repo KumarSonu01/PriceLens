@@ -159,7 +159,90 @@ const importFlipkartProduct =
     });
   });
 
+const refreshProductPrice =
+  asyncHandler(async (req, res) => {
+    const product =
+      await Product.findById(
+        req.params.id
+      );
+
+    if (!product) {
+      res.status(404);
+
+      throw new Error(
+        "Product not found"
+      );
+    }
+
+    const listing =
+      await Listing.findOne({
+        product:
+          product._id,
+
+        source:
+          "Flipkart",
+      });
+
+    if (!listing) {
+      res.status(404);
+
+      throw new Error(
+        "Flipkart listing not found"
+      );
+    }
+
+    const scrapedData =
+      await scrapeFlipkartProduct(
+        listing.productUrl
+      );
+
+    const oldPrice =
+      listing.price;
+
+    listing.price =
+      scrapedData.price;
+
+    listing.rating =
+      scrapedData.rating;
+
+    listing.reviewsCount =
+      scrapedData.reviewsCount;
+
+    listing.images =
+      scrapedData.images;
+
+    listing.scrapedAt =
+      new Date();
+
+    await listing.save();
+
+    if (
+      oldPrice !==
+      scrapedData.price
+    ) {
+      await PriceHistory.create({
+        product:
+          product._id,
+
+        listing:
+          listing._id,
+
+        price:
+          scrapedData.price,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      oldPrice,
+      newPrice:
+        scrapedData.price,
+      listing,
+    });
+  });
+
 module.exports = {
   getAdminStats,
   importFlipkartProduct,
+  refreshProductPrice,
 };
