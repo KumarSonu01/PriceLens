@@ -14,6 +14,7 @@ const {
   createListing,
   getProductListings,
   getSellerListings,
+  getSellerStats,
   getAllListings,
   updateListing,
   deleteListing,
@@ -35,6 +36,15 @@ router.get(
     "local_seller"
   ),
   getSellerListings
+);
+
+router.get(
+  "/seller/stats",
+  protect,
+  authorizeRoles(
+    "local_seller"
+  ),
+  getSellerStats
 );
 
 router.get(

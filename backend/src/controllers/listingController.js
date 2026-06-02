@@ -114,6 +114,41 @@ const getSellerListings =
     );
   });
 
+const getSellerStats =
+  asyncHandler(async (req, res) => {
+    const listings =
+      await Listing.find({
+        seller: req.user._id,
+      });
+
+    const totalListings =
+      listings.length;
+
+    const activeDeals =
+      listings.filter(
+        (listing) =>
+          listing.offer &&
+          listing.offer.trim() !== ""
+      ).length;
+
+    const uniqueProducts =
+      new Set(
+        listings.map(
+          (listing) =>
+            listing.product.toString()
+        )
+      );
+
+    res.status(200).json({
+      totalProducts:
+        uniqueProducts.size,
+
+      totalListings,
+
+      activeDeals,
+    });
+  });
+
 const getAllListings =
   asyncHandler(async (req, res) => {
     const listings =
@@ -267,6 +302,7 @@ module.exports = {
   createListing,
   getProductListings,
   getSellerListings,
+  getSellerStats,
   getAllListings,
   updateListing,
   deleteListing,

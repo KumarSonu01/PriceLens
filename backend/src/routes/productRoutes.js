@@ -20,14 +20,7 @@ const {
   updateProduct,
 } = require("../controllers/productController");
 
-router.post(
-  "/",
-  protect,
-  authorizeRoles(
-    "admin"
-  ),
-  createProduct
-);
+/* Public Routes */
 
 router.get(
   "/",
@@ -47,6 +40,17 @@ router.get(
 router.get(
   "/:id",
   getSingleProduct
+);
+
+/* Admin Routes */
+
+router.post(
+  "/",
+  protect,
+  authorizeRoles(
+    "admin"
+  ),
+  createProduct
 );
 
 router.put(

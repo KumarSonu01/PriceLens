@@ -16,6 +16,12 @@ const productRoutes =
 const listingRoutes =
   require("./routes/listingRoutes");
 
+const adminRoutes =
+  require("./routes/adminRoutes");
+
+const reviewRoutes =
+  require("./routes/reviewRoutes");
+
 const priceAlertRoutes =
   require("./routes/priceAlertRoutes");
 
@@ -62,6 +68,16 @@ app.use(
 app.use(
   "/api/listings",
   listingRoutes
+);
+
+app.use(
+  "/api/admin",
+  adminRoutes
+);
+
+app.use(
+  "/api/reviews",
+  reviewRoutes
 );
 
 app.use(

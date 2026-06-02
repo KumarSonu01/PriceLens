@@ -64,6 +64,18 @@ const PriceHistoryChart = ({
         )
       : 0;
 
+  const priceChange =
+    formattedData.length > 1
+      ? (
+          ((currentPrice -
+            formattedData[0]
+              .price) /
+            formattedData[0]
+              .price) *
+          100
+        ).toFixed(1)
+      : 0;
+
   return (
     <div className="bg-white rounded-2xl shadow p-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5 mb-8">
@@ -74,6 +86,23 @@ const PriceHistoryChart = ({
 
           <p className="text-gray-500 mt-1">
             Historical price trend
+          </p>
+
+          <p
+            className={`font-semibold mt-2 ${
+              priceChange >= 0
+                ? "text-red-600"
+                : "text-green-600"
+            }`}
+          >
+            {priceChange >= 0
+              ? `↑ ${priceChange}%`
+              : `↓ ${Math.abs(
+                  priceChange
+                )}%`}
+            {" "}
+            from first recorded
+            price
           </p>
         </div>
 
@@ -93,7 +122,7 @@ const PriceHistoryChart = ({
 
           <h3 className="text-2xl font-bold mt-1">
             ₹
-            {currentPrice}
+            {currentPrice.toLocaleString()}
           </h3>
         </div>
 
@@ -104,7 +133,7 @@ const PriceHistoryChart = ({
 
           <h3 className="text-2xl font-bold mt-1">
             ₹
-            {averagePrice}
+            {averagePrice.toLocaleString()}
           </h3>
         </div>
 
@@ -115,7 +144,7 @@ const PriceHistoryChart = ({
 
           <h3 className="text-2xl font-bold mt-1">
             ₹
-            {lowestPrice}
+            {lowestPrice.toLocaleString()}
           </h3>
         </div>
 
@@ -126,7 +155,7 @@ const PriceHistoryChart = ({
 
           <h3 className="text-2xl font-bold mt-1">
             ₹
-            {highestPrice}
+            {highestPrice.toLocaleString()}
           </h3>
         </div>
       </div>
@@ -134,13 +163,14 @@ const PriceHistoryChart = ({
       {formattedData.length ===
       0 ? (
         <div className="h-[350px] flex items-center justify-center text-gray-500 text-lg">
-          No price history available
+          No price history
+          available
         </div>
       ) : (
-        <div className="h-[350px]">
+        <div className="w-full h-[350px] min-w-0">
           <ResponsiveContainer
             width="100%"
-            height="100%"
+            height={350}
           >
             <LineChart
               data={
@@ -149,16 +179,32 @@ const PriceHistoryChart = ({
             >
               <CartesianGrid strokeDasharray="3 3" />
 
-              <XAxis dataKey="date" />
+              <XAxis
+                dataKey="date"
+              />
 
               <YAxis
                 domain={[
-                  "dataMin - 500",
-                  "dataMax + 500",
+                  (
+                    dataMin
+                  ) =>
+                    dataMin -
+                    500,
+                  (
+                    dataMax
+                  ) =>
+                    dataMax +
+                    500,
                 ]}
               />
 
-              <Tooltip />
+              <Tooltip
+                formatter={(
+                  value
+                ) =>
+                  `₹${value.toLocaleString()}`
+                }
+              />
 
               <Line
                 type="monotone"

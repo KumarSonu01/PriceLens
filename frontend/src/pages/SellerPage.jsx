@@ -1,4 +1,9 @@
 import {
+  useEffect,
+  useState,
+} from "react";
+
+import {
   useNavigate,
 } from "react-router-dom";
 
@@ -6,12 +11,41 @@ import {
   useSelector,
 } from "react-redux";
 
-const SellerPage = () => {
-  const navigate = useNavigate();
+import api from "../api/axios";
 
-  const { userInfo } = useSelector(
-    (state) => state.auth
-  );
+const SellerPage = () => {
+  const navigate =
+    useNavigate();
+
+  const { userInfo } =
+    useSelector(
+      (state) => state.auth
+    );
+
+  const [stats, setStats] =
+    useState({
+      totalProducts: 0,
+      totalListings: 0,
+      activeDeals: 0,
+    });
+
+  useEffect(() => {
+    const fetchStats =
+      async () => {
+        try {
+          const { data } =
+            await api.get(
+              "/listings/seller/stats"
+            );
+
+          setStats(data);
+        } catch (error) {
+          console.log(error);
+        }
+      };
+
+    fetchStats();
+  }, []);
 
   return (
     <div className="p-10">
@@ -20,7 +54,8 @@ const SellerPage = () => {
       </h1>
 
       <p className="text-2xl text-gray-600 mb-10">
-        Welcome back, {userInfo?.name}
+        Welcome back,{" "}
+        {userInfo?.name}
       </p>
 
       <div className="grid md:grid-cols-3 gap-6 mb-12">
@@ -30,7 +65,9 @@ const SellerPage = () => {
           </h2>
 
           <p className="text-5xl font-bold">
-            0
+            {
+              stats.totalProducts
+            }
           </p>
         </div>
 
@@ -40,7 +77,9 @@ const SellerPage = () => {
           </h2>
 
           <p className="text-5xl font-bold">
-            0
+            {
+              stats.totalListings
+            }
           </p>
         </div>
 
@@ -50,7 +89,9 @@ const SellerPage = () => {
           </h2>
 
           <p className="text-5xl font-bold">
-            0
+            {
+              stats.activeDeals
+            }
           </p>
         </div>
       </div>
@@ -61,10 +102,6 @@ const SellerPage = () => {
         </h2>
 
         <div className="flex flex-wrap gap-5">
-          
-
-          
-
           <button
             onClick={() =>
               navigate(

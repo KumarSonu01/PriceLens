@@ -207,9 +207,13 @@ const getPriceHistory =
       await PriceHistory.find({
         product:
           req.params.id,
-      }).sort({
-        createdAt: 1,
-      });
+      })
+        .sort({
+          createdAt: 1,
+        })
+        .select(
+          "price createdAt"
+        );
 
     res.status(200).json(
       history

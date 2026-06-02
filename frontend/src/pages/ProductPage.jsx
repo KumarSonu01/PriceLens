@@ -27,6 +27,8 @@ import ComparisonTable from "../components/product/ComparisonTable";
 
 import RelatedProducts from "../components/product/RelatedProducts";
 
+import ReviewSection from "../components/review/ReviewSection";
+
 const ProductPage = () => {
   const { id } = useParams();
 
@@ -502,6 +504,12 @@ const ProductPage = () => {
         <PriceHistoryChart
           data={priceHistory}
         />
+      </div>
+
+      <div className="mt-16">
+        <ReviewSection
+          productId={id}
+      />
       </div>
 
       <div className="mt-16">
