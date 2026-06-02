@@ -27,7 +27,6 @@ const userSchema = new mongoose.Schema(
 
       enum: [
         "buyer",
-        "online_seller",
         "local_seller",
         "admin",
       ],

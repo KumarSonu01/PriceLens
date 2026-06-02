@@ -5,6 +5,14 @@ const authorizeRoles =
       res,
       next
     ) => {
+      if (!req.user) {
+        res.status(401);
+
+        throw new Error(
+          "User not found"
+        );
+      }
+
       if (
         !roles.includes(
           req.user.role

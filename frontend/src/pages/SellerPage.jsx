@@ -48,7 +48,7 @@ const SellerPage = () => {
   }, []);
 
   return (
-    <div className="p-10">
+    <div className="p-10 min-h-[80vh]">
       <h1 className="text-5xl font-bold mb-3">
         Seller Dashboard
       </h1>

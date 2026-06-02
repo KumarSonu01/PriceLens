@@ -13,9 +13,11 @@ const listingSchema =
       },
 
       source: {
-      type: String,
-      required: true,
-      trim: true,
+        type: String,
+
+        required: true,
+
+        trim: true,
       },
 
       seller: {
@@ -74,6 +76,18 @@ const listingSchema =
 
         default: "NA",
       },
+
+      isScraped: {
+        type: Boolean,
+
+        default: false,
+      },
+
+      scrapedAt: {
+        type: Date,
+
+        default: null,
+      },
     },
     {
       timestamps: true,
@@ -93,11 +107,11 @@ listingSchema.index(
   }
 );
 
-
 const Listing =
   mongoose.model(
     "Listing",
     listingSchema
   );
 
-module.exports = Listing;
+module.exports =
+  Listing;

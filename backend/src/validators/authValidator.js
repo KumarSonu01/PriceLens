@@ -20,7 +20,6 @@ const registerSchema =
     role:
       Joi.string().valid(
         "buyer",
-        "online_seller",
         "local_seller",
         "admin"
       ),

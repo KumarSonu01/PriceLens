@@ -13,6 +13,7 @@ const authorizeRoles =
 
 const {
   getAdminStats,
+  importFlipkartProduct,
 } = require("../controllers/adminController");
 
 router.get(
@@ -22,6 +23,15 @@ router.get(
     "admin"
   ),
   getAdminStats
+);
+
+router.post(
+  "/import/flipkart",
+  protect,
+  authorizeRoles(
+    "admin"
+  ),
+  importFlipkartProduct
 );
 
 module.exports = router;

@@ -32,6 +32,8 @@ import SearchPage from "./pages/SearchPage";
 import AlertsPage from "./pages/AlertsPage";
 import WishlistPage from "./pages/WishlistPage";
 
+import ImportProductPage from "./pages/ImportProductPage";
+
 function App() {
   return (
     <Layout>
@@ -104,6 +106,13 @@ function App() {
           <Route
             path="/admin/add-product"
             element={<AddProductPage />}
+          />
+
+          <Route
+            path="/admin/import-product"
+            element={
+              <ImportProductPage />
+            }
           />
 
           <Route

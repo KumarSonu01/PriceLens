@@ -40,7 +40,7 @@ const AdminPage = () => {
   }, []);
 
   return (
-    <div className="max-w-7xl mx-auto p-10">
+    <div className="max-w-7xl mx-auto p-10 min-h-[80vh]">
       <div className="mb-10">
         <h1 className="text-5xl font-bold">
           Admin Dashboard
@@ -103,7 +103,7 @@ const AdminPage = () => {
         </div>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-6">
+      <div className="grid md:grid-cols-4 gap-6">
         <button
           onClick={() =>
             navigate(
@@ -113,6 +113,17 @@ const AdminPage = () => {
           className="bg-black text-white p-8 rounded-xl hover:opacity-90 transition"
         >
           Add Product
+        </button>
+
+        <button
+          onClick={() =>
+            navigate(
+              "/admin/import-product"
+            )
+          }
+          className="bg-green-600 text-white p-8 rounded-xl hover:opacity-90 transition"
+        >
+          Import Flipkart Product
         </button>
 
         <button
