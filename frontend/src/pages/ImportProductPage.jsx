@@ -3,6 +3,9 @@ import { useState } from "react";
 import api from "../api/axios";
 
 const ImportProductPage = () => {
+  const [source, setSource] =
+    useState("Flipkart");
+
   const [url, setUrl] =
     useState("");
 
@@ -19,9 +22,16 @@ const ImportProductPage = () => {
       try {
         setLoading(true);
 
+        setMessage("");
+
+        const endpoint =
+          source === "Amazon"
+            ? "/admin/import/amazon"
+            : "/admin/import/flipkart";
+
         const { data } =
           await api.post(
-            "/admin/import/flipkart",
+            endpoint,
             {
               url,
             }
@@ -46,13 +56,13 @@ const ImportProductPage = () => {
   return (
     <div className="max-w-3xl mx-auto p-10 min-h-[80vh]">
       <h1 className="text-4xl font-bold mb-3">
-        Import Flipkart Product
+        Import Product
       </h1>
 
       <p className="text-gray-600 mb-8">
-        Paste a Flipkart product URL
-        and automatically add it to
-        PriceLens.
+        Import products directly
+        from Flipkart or Amazon
+        into PriceLens.
       </p>
 
       <form
@@ -60,12 +70,38 @@ const ImportProductPage = () => {
         className="bg-white p-6 rounded-xl shadow"
       >
         <label className="block font-medium mb-2">
-          Flipkart Product URL
+          Source
+        </label>
+
+        <select
+          value={source}
+          onChange={(e) =>
+            setSource(
+              e.target.value
+            )
+          }
+          className="w-full border rounded-lg p-4 mb-5 focus:outline-none focus:ring-2 focus:ring-green-500"
+        >
+          <option value="Flipkart">
+            Flipkart
+          </option>
+
+          <option value="Amazon">
+            Amazon
+          </option>
+        </select>
+
+        <label className="block font-medium mb-2">
+          Product URL
         </label>
 
         <input
           type="text"
-          placeholder="https://www.flipkart.com/..."
+          placeholder={
+            source === "Amazon"
+              ? "https://www.amazon.in/..."
+              : "https://www.flipkart.com/..."
+          }
           value={url}
           onChange={(e) =>
             setUrl(
@@ -83,12 +119,20 @@ const ImportProductPage = () => {
         >
           {loading
             ? "Importing..."
-            : "Import Product"}
+            : `Import ${source} Product`}
         </button>
       </form>
 
       {message && (
-        <div className="mt-6 p-4 rounded-lg bg-green-100 text-green-700">
+        <div
+          className={`mt-6 p-4 rounded-lg ${
+            message.includes(
+              "Successfully"
+            )
+              ? "bg-green-100 text-green-700"
+              : "bg-red-100 text-red-700"
+          }`}
+        >
           {message}
         </div>
       )}

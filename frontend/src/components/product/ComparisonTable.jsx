@@ -3,6 +3,25 @@ const ComparisonTable = ({
   marketAverage,
   bestListingId,
 }) => {
+  const getSourceLogo = (
+    source
+  ) => {
+    if (
+      source === "Amazon"
+    ) {
+      return "https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg";
+    }
+
+    if (
+      source ===
+      "Flipkart"
+    ) {
+      return "https://static-assets-web.flixcart.com/www/linchpin/fk-cp-zion/img/fk-logo_f64bb3.png";
+    }
+
+    return "https://via.placeholder.com/40";
+  };
+
   return (
     <div className="bg-white rounded-2xl shadow overflow-hidden">
       <div className="p-5 border-b">
@@ -57,10 +76,14 @@ const ComparisonTable = ({
                           listing
                             ?.seller
                             ?.avatar ||
-                          "https://via.placeholder.com/40"
+                          getSourceLogo(
+                            listing.source
+                          )
                         }
-                        alt="seller"
-                        className="w-10 h-10 rounded-full object-cover border"
+                        alt={
+                          listing.source
+                        }
+                        className="w-10 h-10 rounded-full object-contain border bg-white p-1"
                       />
 
                       <div>
@@ -71,26 +94,24 @@ const ComparisonTable = ({
                             listing
                               ?.seller
                               ?.name ||
+                            listing.source ||
                             "Unknown Seller"}
                         </p>
 
                         <p className="text-xs text-gray-500">
-                          {
-                            listing
-                              ?.seller
-                              ?.email
-                          }
+                          {listing
+                            ?.seller
+                            ?.email ||
+                            listing.source}
                         </p>
                       </div>
                     </div>
                   </td>
 
-                  <td className="p-4 capitalize">
-                    {listing?.seller?.role
-                      ?.replaceAll(
-                        "_",
-                        " "
-                      ) || "-"}
+                  <td className="p-4">
+                    {listing.isScraped
+                      ? "Marketplace"
+                      : "Local Seller"}
                   </td>
 
                   <td className="p-4 font-bold text-green-600">

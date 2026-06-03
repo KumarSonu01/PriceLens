@@ -14,65 +14,45 @@ const ListingCard = ({
   const sourceConfig = {
     amazon: {
       name: "Amazon",
-
       icon: FaAmazon,
-
       bg: "bg-orange-100",
-
       text: "text-orange-700",
-
       border:
         "border-orange-200",
     },
 
     flipkart: {
       name: "Flipkart",
-
       icon: FaStore,
-
       bg: "bg-blue-100",
-
       text: "text-blue-700",
-
       border:
         "border-blue-200",
     },
 
     blinkit: {
       name: "Blinkit",
-
       icon: FaStore,
-
       bg: "bg-yellow-100",
-
       text: "text-yellow-700",
-
       border:
         "border-yellow-200",
     },
 
     zepto: {
       name: "Zepto",
-
       icon: FaStore,
-
       bg: "bg-pink-100",
-
       text: "text-pink-700",
-
       border:
         "border-pink-200",
     },
 
     local: {
       name: "Local Store",
-
       icon: FaStore,
-
       bg: "bg-gray-100",
-
       text: "text-gray-700",
-
       border:
         "border-gray-200",
     },
@@ -80,7 +60,7 @@ const ListingCard = ({
 
   const currentSource =
     sourceConfig[
-      listing.source
+      listing.source?.toLowerCase()
     ] ||
     sourceConfig.local;
 
@@ -119,8 +99,14 @@ const ListingCard = ({
 
             <span>
               {listing?.seller
-                ? "Verified Seller"
-                : "Marketplace"}
+                ? listing
+                    ?.seller
+                    ?.shopName ||
+                  listing
+                    ?.seller
+                    ?.name ||
+                  "Verified Seller"
+                : currentSource.name}
             </span>
           </div>
         </div>

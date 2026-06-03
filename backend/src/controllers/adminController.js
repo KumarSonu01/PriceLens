@@ -19,6 +19,14 @@ const createSlug =
 const scrapeFlipkartProduct =
   require("../scrapers/flipkartScraper");
 
+const scrapeAmazonProduct =
+  require("../scrapers/amazonScraper");
+
+const findMatchingProduct =
+  require(
+    "../utils/findMatchingProduct"
+  );
+
 const getAdminStats =
   asyncHandler(async (req, res) => {
     const totalProducts =
@@ -69,6 +77,14 @@ const importFlipkartProduct =
       await Product.findOne({
         slug,
       });
+
+      if (!product) {
+        product =
+        await findMatchingProduct(
+          scrapedData.title,
+          scrapedData.brand
+        );
+    }
 
     if (!product) {
       product =
@@ -241,8 +257,139 @@ const refreshProductPrice =
     });
   });
 
+  const importAmazonProduct =
+    asyncHandler(async (req, res) => {
+    const { url } = req.body;
+
+    if (!url) {
+      res.status(400);
+
+      throw new Error(
+        "Product URL is required"
+      );
+    }
+
+    const scrapedData =
+      await scrapeAmazonProduct(
+        url
+      );
+
+    const slug =
+      createSlug(
+        scrapedData.title
+      );
+
+    let product =
+  await Product.findOne({
+    slug,
+  });
+
+  if (!product) {
+    product =
+    await findMatchingProduct(
+      scrapedData.title,
+      scrapedData.brand
+    );
+  }
+
+if (!product) {
+  product =
+    await Product.create({
+      title:
+        scrapedData.title,
+
+      slug,
+
+      brand:
+        scrapedData.brand ||
+        "Amazon",
+
+      category:
+        scrapedData.category ||
+        "General",
+
+      description:
+        scrapedData.description ||
+        "",
+
+      images:
+        scrapedData.images,
+
+      overallRating:
+        scrapedData.rating ||
+        0,
+        });
+    }
+
+    let listing =
+      await Listing.findOne({
+        product:
+          product._id,
+
+        source:
+          "Amazon",
+      });
+
+    if (!listing) {
+      listing =
+        await Listing.create({
+          product:
+            product._id,
+
+          source:
+            "Amazon",
+
+          seller: null,
+
+          price:
+            scrapedData.price,
+
+          stock: true,
+
+          productUrl:
+            scrapedData.productUrl,
+
+          rating:
+            scrapedData.rating ||
+            0,
+
+          reviewsCount:
+            scrapedData.reviewsCount ||
+            0,
+
+          images:
+            scrapedData.images,
+
+          offer: "NA",
+
+          isScraped: true,
+
+          scrapedAt:
+            new Date(),
+        });
+
+      await PriceHistory.create({
+        product:
+          product._id,
+
+        listing:
+          listing._id,
+
+        price:
+          scrapedData.price,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      product,
+      listing,
+    });
+  });
+
 module.exports = {
   getAdminStats,
   importFlipkartProduct,
   refreshProductPrice,
+  importAmazonProduct,
 };

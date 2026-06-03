@@ -6,6 +6,9 @@ const app =
 const connectDB =
   require("./config/db");
 
+const startPriceRefreshJob =
+  require("./jobs/priceRefreshJob");
+
 connectDB();
 
 const PORT =
@@ -16,4 +19,6 @@ app.listen(PORT, () => {
   console.log(
     `Server running on port ${PORT}`
   );
+
+  startPriceRefreshJob();
 });

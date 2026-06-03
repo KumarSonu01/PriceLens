@@ -14,6 +14,7 @@ const authorizeRoles =
 const {
   getAdminStats,
   importFlipkartProduct,
+  importAmazonProduct,
   refreshProductPrice,
 } = require(
   "../controllers/adminController"
@@ -35,6 +36,15 @@ router.post(
     "admin"
   ),
   importFlipkartProduct
+);
+
+router.post(
+  "/import/amazon",
+  protect,
+  authorizeRoles(
+    "admin"
+  ),
+  importAmazonProduct
 );
 
 router.post(

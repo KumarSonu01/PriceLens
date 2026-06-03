@@ -10,6 +10,7 @@ const ProductHero = ({
   isWishlisted,
   wishlistLoading,
   toggleWishlist,
+  lastUpdated,
 }) => {
   return (
     <div className="grid lg:grid-cols-[0.9fr_1.1fr] gap-10 items-start">
@@ -92,6 +93,15 @@ const ProductHero = ({
             </div>
           )}
         </div>
+
+        {lastUpdated && (
+          <div className="mt-4 text-sm text-gray-500">
+            Last Updated:{" "}
+            {new Date(
+              lastUpdated
+            ).toLocaleString()}
+          </div>
+        )}
 
         {userInfo && (
           <button
