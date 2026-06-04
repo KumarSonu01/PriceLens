@@ -19,6 +19,10 @@ const AdminPage = () => {
       totalListings: 0,
       totalUsers: 0,
       totalSellers: 0,
+      importedProducts: 0,
+      totalAlerts: 0,
+      activeAlerts: 0,
+      triggeredAlerts: 0,
     });
 
   useEffect(() => {
@@ -48,8 +52,9 @@ const AdminPage = () => {
 
         <p className="text-gray-600 mt-3 text-lg">
           Manage products,
-          listings, sellers and
-          users.
+          listings, sellers,
+          users, alerts and
+          imports.
         </p>
       </div>
 
@@ -101,6 +106,54 @@ const AdminPage = () => {
             }
           </p>
         </div>
+
+        <div className="bg-white p-6 rounded-xl shadow">
+          <h2 className="text-lg font-semibold text-gray-600">
+            Imported Products
+          </h2>
+
+          <p className="text-4xl font-bold mt-3 text-green-600">
+            {
+              stats.importedProducts
+            }
+          </p>
+        </div>
+
+        <div className="bg-white p-6 rounded-xl shadow">
+          <h2 className="text-lg font-semibold text-gray-600">
+            Total Alerts
+          </h2>
+
+          <p className="text-4xl font-bold mt-3 text-blue-600">
+            {
+              stats.totalAlerts
+            }
+          </p>
+        </div>
+
+        <div className="bg-white p-6 rounded-xl shadow">
+          <h2 className="text-lg font-semibold text-gray-600">
+            Active Alerts
+          </h2>
+
+          <p className="text-4xl font-bold mt-3 text-orange-600">
+            {
+              stats.activeAlerts
+            }
+          </p>
+        </div>
+
+        <div className="bg-white p-6 rounded-xl shadow">
+          <h2 className="text-lg font-semibold text-gray-600">
+            Triggered Alerts
+          </h2>
+
+          <p className="text-4xl font-bold mt-3 text-green-600">
+            {
+              stats.triggeredAlerts
+            }
+          </p>
+        </div>
       </div>
 
       <div className="grid md:grid-cols-4 gap-6">
@@ -123,7 +176,7 @@ const AdminPage = () => {
           }
           className="bg-green-600 text-white p-8 rounded-xl hover:opacity-90 transition"
         >
-          Import Flipkart Product
+          Import Product
         </button>
 
         <button

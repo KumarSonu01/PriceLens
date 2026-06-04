@@ -3,7 +3,13 @@ import {
   useState,
 } from "react";
 
+import {
+  Link,
+} from "react-router-dom";
+
 import api from "../api/axios";
+
+import { toast } from "react-toastify";
 
 const AlertsPage = () => {
   const [alerts, setAlerts] =
@@ -12,31 +18,33 @@ const AlertsPage = () => {
   const [loading, setLoading] =
     useState(true);
 
+  useEffect(() => {
+    fetchAlerts();
+  }, []);
+
   const fetchAlerts =
     async () => {
       try {
         const { data } =
           await api.get(
-            "/price-alerts"
+            "/alerts/my-alerts"
           );
 
         setAlerts(data);
       } catch (error) {
-        console.log(error);
+        toast.error(
+          "Failed to load alerts"
+        );
       } finally {
         setLoading(false);
       }
     };
 
-  useEffect(() => {
-    fetchAlerts();
-  }, []);
-
   const deleteAlert =
     async (id) => {
       try {
         await api.delete(
-          `/price-alerts/${id}`
+          `/alerts/${id}`
         );
 
         setAlerts((prev) =>
@@ -45,42 +53,40 @@ const AlertsPage = () => {
               alert._id !== id
           )
         );
+
+        toast.success(
+          "Alert deleted"
+        );
       } catch (error) {
-        console.log(error);
+        toast.error(
+          "Delete failed"
+        );
       }
     };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-2xl font-semibold">
-        Loading Alerts...
+      <div className="flex justify-center items-center min-h-[70vh] text-lg font-medium">
+        Loading alerts...
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6 md:p-10 min-h-screen">
-      <div className="flex items-center justify-between mb-10">
-        <h1 className="text-4xl font-bold">
-          My Price Alerts
-        </h1>
+    <div className="max-w-6xl mx-auto p-6 min-h-screen">
+      <h1 className="text-3xl font-bold mb-6">
+        My Price Alerts
+      </h1>
 
-        <div className="bg-black text-white px-5 py-2 rounded-xl font-semibold">
-          {alerts.length} Alerts
-        </div>
-      </div>
-
-      {alerts.length ===
-      0 ? (
-        <div className="bg-white rounded-2xl shadow p-10 text-center">
-          <h2 className="text-2xl font-bold">
+      {alerts.length === 0 ? (
+        <div className="bg-white rounded-xl shadow p-8 text-center">
+          <h2 className="text-xl font-semibold mb-2">
             No Alerts Yet
           </h2>
 
-          <p className="text-gray-500 mt-3">
-            Create alerts on
-            products to track
-            future price drops.
+          <p className="text-gray-600">
+            Create a price alert
+            from any product page.
           </p>
         </div>
       ) : (
@@ -88,76 +94,73 @@ const AlertsPage = () => {
           {alerts.map(
             (alert) => (
               <div
-                key={alert._id}
-                className={`bg-white rounded-2xl shadow p-6 border transition ${
-                  alert.isTriggered
-                    ? "border-green-500"
-                    : "border-gray-200"
-                }`}
+                key={
+                  alert._id
+                }
+                className="bg-white rounded-xl shadow p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4"
               >
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-                  <div className="flex items-center gap-5">
-                    <img
-                      src={
-                        alert.product
-                          ?.images?.[0] ||
-                        "https://via.placeholder.com/100"
-                      }
-                      alt={
-                        alert.product
+                <div className="flex gap-4 items-center">
+                  <img
+                    src={
+                      alert
+                        .product
+                        ?.images?.[0] ||
+                      "https://via.placeholder.com/100"
+                    }
+                    alt={
+                      alert
+                        .product
+                        ?.title
+                    }
+                    className="w-24 h-24 object-cover rounded-lg border"
+                  />
+
+                  <div>
+                    <Link
+                      to={`/product/${alert.product?._id}`}
+                      className="font-semibold text-lg hover:text-green-600 transition"
+                    >
+                      {
+                        alert
+                          .product
                           ?.title
                       }
-                      className="w-24 h-24 object-contain bg-gray-100 rounded-xl p-2"
-                    />
+                    </Link>
 
-                    <div>
-                      <h2 className="text-2xl font-bold">
-                        {
-                          alert
-                            .product
-                            ?.title
-                        }
-                      </h2>
-
-                      <p className="text-gray-500 mt-2">
-                        Target Price:
+                    <p className="text-gray-600 mt-1">
+                      Target Price:
+                      <span className="font-semibold text-green-600 ml-1">
                         ₹
                         {alert.targetPrice.toLocaleString()}
-                      </p>
+                      </span>
+                    </p>
 
-                      <p className="text-sm text-gray-400 mt-2">
-                        Created:
-                        {" "}
-                        {new Date(
-                          alert.createdAt
-                        ).toLocaleDateString()}
-                      </p>
+                    <div className="mt-2">
+                      <span
+                        className={`px-3 py-1 rounded-full text-sm font-medium ${
+                          alert.isTriggered
+                            ? "bg-green-100 text-green-700"
+                            : "bg-orange-100 text-orange-700"
+                        }`}
+                      >
+                        {alert.isTriggered
+                          ? "Triggered"
+                          : "Active"}
+                      </span>
                     </div>
                   </div>
-
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                    {alert.isTriggered ? (
-                      <div className="bg-green-100 text-green-700 px-5 py-3 rounded-xl font-bold">
-                        🎉 Price Dropped
-                      </div>
-                    ) : (
-                      <div className="bg-yellow-100 text-yellow-700 px-5 py-3 rounded-xl font-bold">
-                        Waiting For Drop
-                      </div>
-                    )}
-
-                    <button
-                      onClick={() =>
-                        deleteAlert(
-                          alert._id
-                        )
-                      }
-                      className="bg-red-600 hover:bg-red-700 transition text-white px-5 py-3 rounded-xl font-semibold"
-                    >
-                      Remove
-                    </button>
-                  </div>
                 </div>
+
+                <button
+                  onClick={() =>
+                    deleteAlert(
+                      alert._id
+                    )
+                  }
+                  className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition"
+                >
+                  Delete Alert
+                </button>
               </div>
             )
           )}

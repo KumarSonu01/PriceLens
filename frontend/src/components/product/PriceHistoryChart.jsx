@@ -64,14 +64,17 @@ const PriceHistoryChart = ({
         )
       : 0;
 
+  const firstPrice =
+    formattedData[0]?.price ||
+    0;
+
   const priceChange =
-    formattedData.length > 1
+    formattedData.length > 1 &&
+    firstPrice > 0
       ? (
           ((currentPrice -
-            formattedData[0]
-              .price) /
-            formattedData[0]
-              .price) *
+            firstPrice) /
+            firstPrice) *
           100
         ).toFixed(1)
       : 0;
@@ -85,24 +88,29 @@ const PriceHistoryChart = ({
           </h2>
 
           <p className="text-gray-500 mt-1">
-            Historical price trend
+            Historical price
+            trend
           </p>
 
           <p
             className={`font-semibold mt-2 ${
-              priceChange >= 0
+              Number(
+                priceChange
+              ) >= 0
                 ? "text-red-600"
                 : "text-green-600"
             }`}
           >
-            {priceChange >= 0
+            {Number(
+              priceChange
+            ) >= 0
               ? `↑ ${priceChange}%`
               : `↓ ${Math.abs(
                   priceChange
                 )}%`}
             {" "}
-            from first recorded
-            price
+            from first
+            recorded price
           </p>
         </div>
 
@@ -188,13 +196,17 @@ const PriceHistoryChart = ({
                   (
                     dataMin
                   ) =>
-                    dataMin -
-                    500,
+                    Math.floor(
+                      dataMin *
+                        0.95
+                    ),
                   (
                     dataMax
                   ) =>
-                    dataMax +
-                    500,
+                    Math.ceil(
+                      dataMax *
+                        1.05
+                    ),
                 ]}
               />
 
@@ -202,7 +214,9 @@ const PriceHistoryChart = ({
                 formatter={(
                   value
                 ) =>
-                  `₹${value.toLocaleString()}`
+                  `₹${Number(
+                    value
+                  ).toLocaleString()}`
                 }
               />
 

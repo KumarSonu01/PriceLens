@@ -2,7 +2,7 @@ const Product =
   require("../models/Product");
 
 const normalize =
-  (text) =>
+  (text = "") =>
     text
       .toLowerCase()
       .replace(
@@ -28,10 +28,11 @@ const findMatchingProduct =
     const products =
       await Product.find({
         brand: {
-          $regex: new RegExp(
-            brand,
-            "i"
-          ),
+          $regex:
+            new RegExp(
+              brand,
+              "i"
+            ),
         },
       });
 
@@ -52,18 +53,26 @@ const findMatchingProduct =
             )
         );
 
+      const similarity =
+        matches.length /
+        Math.max(
+          newWords.length,
+          existingWords.length
+        );
+
       console.log(
-        "Comparing with:",
+        "Comparing:",
         product.title
       );
 
       console.log(
-        "Matched words:",
-        matches
+        "Similarity:",
+        similarity
       );
 
       if (
-        matches.length >= 6
+        similarity >=
+        0.6
       ) {
         console.log(
           "Matched:",

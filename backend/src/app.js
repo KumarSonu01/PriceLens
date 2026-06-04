@@ -36,6 +36,11 @@ const {
   errorHandler,
 } = require("./middlewares/errorMiddleware");
 
+const alertRoutes =
+  require(
+    "./routes/alertRoutes"
+  );
+
 const app = express();
 
 app.use(cors());
@@ -93,6 +98,11 @@ app.use(
 app.use(
   "/api/upload",
   uploadRoutes
+);
+
+app.use(
+  "/api/alerts",
+  alertRoutes
 );
 
 app.use(notFound);

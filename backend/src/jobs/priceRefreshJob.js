@@ -1,8 +1,8 @@
 const cron =
   require("node-cron");
 
-const Product =
-  require("../models/Product");
+const checkPriceAlerts =
+  require("./checkPriceAlerts");
 
 const Listing =
   require("../models/Listing");
@@ -12,6 +12,9 @@ const PriceHistory =
 
 const scrapeFlipkartProduct =
   require("../scrapers/flipkartScraper");
+
+const scrapeAmazonProduct =
+  require("../scrapers/amazonScraper");
 
 const startPriceRefreshJob =
   () => {
@@ -25,11 +28,7 @@ const startPriceRefreshJob =
 
           const listings =
             await Listing.find({
-              source:
-                "Flipkart",
-
-              isScraped:
-                true,
+              isScraped: true,
             });
 
           console.log(
@@ -38,10 +37,27 @@ const startPriceRefreshJob =
 
           for (const listing of listings) {
             try {
-              const scrapedData =
-                await scrapeFlipkartProduct(
-                  listing.productUrl
-                );
+              let scrapedData;
+
+              if (
+                listing.source ===
+                "Flipkart"
+              ) {
+                scrapedData =
+                  await scrapeFlipkartProduct(
+                    listing.productUrl
+                  );
+              } else if (
+                listing.source ===
+                "Amazon"
+              ) {
+                scrapedData =
+                  await scrapeAmazonProduct(
+                    listing.productUrl
+                  );
+              } else {
+                continue;
+              }
 
               const oldPrice =
                 listing.price;
@@ -50,10 +66,14 @@ const startPriceRefreshJob =
                 scrapedData.price;
 
               listing.rating =
-                scrapedData.rating;
+                scrapedData.rating || 0;
 
               listing.reviewsCount =
-                scrapedData.reviewsCount;
+                scrapedData.reviewsCount || 0;
+
+              listing.images =
+                scrapedData.images ||
+                listing.images;
 
               listing.scrapedAt =
                 new Date();
@@ -76,15 +96,25 @@ const startPriceRefreshJob =
                 });
 
                 console.log(
-                  `Price changed: ₹${oldPrice} → ₹${scrapedData.price}`
+                  `${listing.source}: ₹${oldPrice} → ₹${scrapedData.price}`
                 );
               }
             } catch (error) {
               console.log(
-                `Failed: ${listing._id}`
+                `Failed ${listing.source}: ${listing._id}`
+              );
+
+              console.log(
+                error.message
               );
             }
           }
+
+          await checkPriceAlerts();
+
+          console.log(
+            "Price alerts checked"
+          );
         } catch (error) {
           console.log(error);
         }

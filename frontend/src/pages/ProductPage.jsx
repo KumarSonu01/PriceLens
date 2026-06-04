@@ -197,33 +197,42 @@ const ProductPage = () => {
   }, [id, userInfo]);
 
   const createAlert =
-    async () => {
-      try {
-        await api.post(
-          "/price-alerts",
-          {
-            productId:
-              product._id,
+  async () => {
+    if (!targetPrice) {
+      return toast.error(
+        "Enter target price"
+      );
+    }
 
-            targetPrice,
-          }
-        );
+    try {
+      await api.post(
+        "/alerts",
+        {
+          productId:
+            product._id,
 
-        toast.success(
-          "Price alert created"
-        );
+          targetPrice:
+            Number(
+              targetPrice
+            ),
+        }
+      );
 
-        setTargetPrice("");
-      } catch (error) {
-        console.log(error);
+      toast.success(
+        "Price alert created"
+      );
 
-        toast.error(
-          error?.response?.data
-            ?.message ||
-            "Failed to create alert"
-        );
-      }
-    };
+      setTargetPrice("");
+    } catch (error) {
+      console.log(error);
+
+      toast.error(
+        error?.response?.data
+          ?.message ||
+          "Failed to create alert"
+      );
+    }
+  };
 
   const toggleWishlist =
     async () => {

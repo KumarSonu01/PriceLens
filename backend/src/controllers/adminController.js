@@ -27,6 +27,14 @@ const findMatchingProduct =
     "../utils/findMatchingProduct"
   );
 
+const normalizeProduct =
+  require(
+    "../utils/normalizeProduct"
+  );
+
+const PriceAlert =
+  require("../models/PriceAlert");
+
 const getAdminStats =
   asyncHandler(async (req, res) => {
     const totalProducts =
@@ -43,11 +51,32 @@ const getAdminStats =
         role: "local_seller",
       });
 
+    const importedProducts =
+      await Listing.countDocuments({
+        isScraped: true,
+    });
+    const totalAlerts =
+      await PriceAlert.countDocuments();
+
+    const activeAlerts =
+      await PriceAlert.countDocuments({
+        isTriggered: false,
+    });
+
+    const triggeredAlerts =
+      await PriceAlert.countDocuments({
+       isTriggered: true,
+    });
+
     res.status(200).json({
       totalProducts,
       totalListings,
       totalUsers,
       totalSellers,
+      importedProducts,
+      totalAlerts,
+      activeAlerts,
+      triggeredAlerts,
     });
   });
 
@@ -88,27 +117,35 @@ const importFlipkartProduct =
 
     if (!product) {
       product =
-        await Product.create({
-          title:
-            scrapedData.title,
+  await Product.create({
+    title:
+      scrapedData.title,
 
-          slug,
+    slug,
 
-          brand:
-            scrapedData.brand,
+    brand:
+      scrapedData.brand,
 
-          category:
-            scrapedData.category,
+    category:
+      scrapedData.category,
 
-          description:
-            scrapedData.description,
+    description:
+      scrapedData.description,
 
-          images:
-            scrapedData.images,
+    specifications:
+      normalizeProduct(
+    scrapedData.specifications
+  ),
 
-          overallRating:
-            scrapedData.rating,
-        });
+    features:
+      scrapedData.features || [],
+
+    images:
+      scrapedData.images,
+
+    overallRating:
+      scrapedData.rating,
+  });
     }
 
     let listing =
@@ -294,31 +331,33 @@ const refreshProductPrice =
 
 if (!product) {
   product =
-    await Product.create({
-      title:
-        scrapedData.title,
+  await Product.create({
+    title:
+      scrapedData.title,
 
-      slug,
+    slug,
 
-      brand:
-        scrapedData.brand ||
-        "Amazon",
+    brand:
+      scrapedData.brand,
 
-      category:
-        scrapedData.category ||
-        "General",
+    category:
+      scrapedData.category,
 
-      description:
-        scrapedData.description ||
-        "",
+    description:
+      scrapedData.description,
 
-      images:
-        scrapedData.images,
+    specifications:
+      scrapedData.specifications || {},
 
-      overallRating:
-        scrapedData.rating ||
-        0,
-        });
+    features:
+      scrapedData.features || [],
+
+    images:
+      scrapedData.images,
+
+    overallRating:
+      scrapedData.rating,
+  });
     }
 
     let listing =

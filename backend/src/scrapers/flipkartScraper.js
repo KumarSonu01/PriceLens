@@ -38,11 +38,88 @@ const scrapeFlipkartProduct =
             );
 
           const product =
-            Array.isArray(
-              json
-            )
+            Array.isArray(json)
               ? json[0]
               : json;
+
+          const pageLines =
+            document.body.innerText
+              .split("\n")
+              .map((line) =>
+                line.trim()
+              )
+              .filter(Boolean);
+
+          const specifications =
+            {};
+
+          for (const line of pageLines) {
+            if (
+              line.includes(
+                "RAM"
+              ) &&
+              line.includes(
+                "ROM"
+              )
+            ) {
+              specifications.Memory =
+                line;
+            }
+
+            if (
+              line.includes(
+                "Processor"
+              )
+            ) {
+              specifications.Processor =
+                line;
+            }
+
+            if (
+              line.includes(
+                "Rear Camera"
+              )
+            ) {
+              specifications.RearCamera =
+                line;
+            }
+
+            if (
+              line.includes(
+                "Front Camera"
+              )
+            ) {
+              specifications.FrontCamera =
+                line;
+            }
+
+            if (
+              line.includes(
+                "Display"
+              ) &&
+              !line.includes(
+                "Excellent phone"
+              )
+            ) {
+              specifications.Display =
+                line;
+            }
+
+            if (
+              line.includes(
+                "Battery"
+              ) &&
+              line.length < 50
+            ) {
+              specifications.Battery =
+                line;
+            }
+          }
+
+          const features =
+            Object.values(
+              specifications
+            );
 
           return {
             title:
@@ -84,6 +161,10 @@ const scrapeFlipkartProduct =
                   .aggregateRating
                   ?.reviewCount
               ) || 0,
+
+            specifications,
+
+            features,
           };
         });
 
@@ -93,7 +174,8 @@ const scrapeFlipkartProduct =
         source:
           "Flipkart",
 
-        productUrl: url,
+        productUrl:
+          url,
       };
     } finally {
       await browser.close();
