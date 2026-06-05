@@ -31,15 +31,27 @@ const wishlistRoutes =
 const uploadRoutes =
   require("./routes/uploadRoutes");
 
-const {
-  notFound,
-  errorHandler,
-} = require("./middlewares/errorMiddleware");
-
 const alertRoutes =
   require(
     "./routes/alertRoutes"
   );
+
+const comparisonRoutes =
+  require(
+    "./routes/comparisonRoutes"
+  );
+
+const priceHistoryRoutes =
+  require(
+    "./routes/priceHistoryRoutes"
+  );
+
+const {
+  notFound,
+  errorHandler,
+} = require(
+  "./middlewares/errorMiddleware"
+);
 
 const app = express();
 
@@ -103,6 +115,16 @@ app.use(
 app.use(
   "/api/alerts",
   alertRoutes
+);
+
+app.use(
+  "/api/comparison",
+  comparisonRoutes
+);
+
+app.use(
+  "/api/price-history",
+  priceHistoryRoutes
 );
 
 app.use(notFound);

@@ -97,6 +97,11 @@ const importFlipkartProduct =
         url
       );
 
+    const normalizedSpecs =
+    normalizeProduct(
+    scrapedData.specifications
+    );
+    
     const slug =
       createSlug(
         scrapedData.title
@@ -133,9 +138,7 @@ const importFlipkartProduct =
       scrapedData.description,
 
     specifications:
-      normalizeProduct(
-    scrapedData.specifications
-  ),
+    normalizedSpecs,
 
     features:
       scrapedData.features || [],
@@ -311,6 +314,38 @@ const refreshProductPrice =
         url
       );
 
+    const normalizedSpecs =
+    normalizeProduct(
+    scrapedData.specifications
+    );
+    const featuresText =
+  scrapedData.features.join(
+    " "
+  );
+
+const ramMatch =
+  featuresText.match(
+    /(\d+)\s*GB\s*RAM/i
+  );
+
+const storageMatch =
+  featuresText.match(
+    /(\d+)\s*GB\s*ROM/i
+  );
+
+if (
+  ramMatch &&
+  !normalizedSpecs.RAM
+) {
+  normalizedSpecs.RAM =
+    `${ramMatch[1]} GB`;
+}
+
+if (storageMatch) {
+  normalizedSpecs.Storage =
+    `${storageMatch[1]} GB`;
+}
+
     const slug =
       createSlug(
         scrapedData.title
@@ -347,8 +382,7 @@ if (!product) {
       scrapedData.description,
 
     specifications:
-      scrapedData.specifications || {},
-
+    normalizedSpecs,
     features:
       scrapedData.features || [],
 

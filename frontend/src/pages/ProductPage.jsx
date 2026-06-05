@@ -153,7 +153,14 @@ const ProductPage = () => {
           );
 
           setPriceHistory(
-            historyResponse.data
+            historyResponse.data.map(
+              (item) => ({
+                date: new Date(
+                  item.createdAt
+                ).toLocaleString(),
+                price: item.price,
+              })
+            )
           );
 
           setRelatedProducts(

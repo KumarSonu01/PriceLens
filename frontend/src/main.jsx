@@ -16,56 +16,62 @@ import App from "./App";
 
 import "./index.css";
 
+import {
+  CompareProvider,
+} from "./features/compare/CompareContext";
+
 ReactDOM.createRoot(
   document.getElementById("root")
 ).render(
   <React.StrictMode>
     <Provider store={store}>
       <BrowserRouter>
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 3000,
+        <CompareProvider>
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 3000,
 
-            style: {
-              borderRadius:
-                "14px",
+              style: {
+                borderRadius:
+                  "14px",
 
-              background:
-                "#111",
+                background:
+                  "#111",
 
-              color: "#fff",
+                color: "#fff",
 
-              padding:
-                "14px 18px",
+                padding:
+                  "14px 18px",
 
-              fontWeight:
-                "600",
-            },
-
-            success: {
-              iconTheme: {
-                primary:
-                  "#22c55e",
-
-                secondary:
-                  "#fff",
+                fontWeight:
+                  "600",
               },
-            },
 
-            error: {
-              iconTheme: {
-                primary:
-                  "#ef4444",
+              success: {
+                iconTheme: {
+                  primary:
+                    "#22c55e",
 
-                secondary:
-                  "#fff",
+                  secondary:
+                    "#fff",
+                },
               },
-            },
-          }}
-        />
 
-        <App />
+              error: {
+                iconTheme: {
+                  primary:
+                    "#ef4444",
+
+                  secondary:
+                    "#fff",
+                },
+              },
+            }}
+          />
+
+          <App />
+        </CompareProvider>
       </BrowserRouter>
     </Provider>
   </React.StrictMode>

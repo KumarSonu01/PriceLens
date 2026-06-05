@@ -1,13 +1,18 @@
 import { Link } from "react-router-dom";
 
+import {
+  useCompare,
+} from "../../features/compare/CompareContext";
+
 const ProductCard = ({
   product,
 }) => {
+  const {
+    addToCompare,
+  } = useCompare();
+
   return (
-    <Link
-      to={`/product/${product._id}`}
-      className="h-full"
-    >
+    <div className="h-full">
       <div className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition duration-300 hover:-translate-y-1 border border-gray-100 h-full flex flex-col">
         <div className="relative">
           <div className="h-72 bg-gray-50 flex items-center justify-center overflow-hidden">
@@ -58,17 +63,33 @@ const ProductCard = ({
                   Starting From
                 </p>
 
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-1">
+                <div className="mt-1">
                   <h3 className="text-3xl font-bold text-green-600 break-all">
                     ₹
                     {
                       product.lowestPrice
                     }
                   </h3>
+                </div>
 
-                  <div className="text-sm text-gray-500 font-medium">
-                    Compare Prices →
-                  </div>
+                <div className="flex gap-2 mt-4">
+                  <Link
+                    to={`/product/${product._id}`}
+                    className="flex-1 bg-green-600 text-white text-center py-2 rounded-lg font-medium hover:bg-green-700 transition"
+                  >
+                    View Product
+                  </Link>
+
+                  <button
+                    onClick={() =>
+                      addToCompare(
+                        product
+                      )
+                    }
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition"
+                  >
+                    Compare
+                  </button>
                 </div>
               </>
             ) : (
@@ -79,7 +100,7 @@ const ProductCard = ({
           </div>
         </div>
       </div>
-    </Link>
+    </div>
   );
 };
 

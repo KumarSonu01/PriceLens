@@ -11,13 +11,23 @@ const scrapeAmazonProduct =
 
     try {
       const page =
-        await browser.newPage();
+        await browser.newPage({
+          userAgent:
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36",
+        });
 
       await page.goto(url, {
         waitUntil:
           "domcontentloaded",
         timeout: 60000,
       });
+
+      await page.waitForSelector(
+        "#productTitle",
+        {
+          timeout: 15000,
+        }
+      );
 
       const productData =
         await page.evaluate(() => {
@@ -27,10 +37,50 @@ const scrapeAmazonProduct =
             )?.innerText?.trim() ||
             "";
 
-          const image =
+          /* Images */
+
+          const images = [
+            ...document.querySelectorAll(
+              "#altImages img"
+            ),
+          ]
+            .map((img) =>
+              img.src?.replace(
+                /\._[^.]+_\./,
+                "."
+              )
+            )
+            .filter(
+              (src) =>
+                src &&
+                !src
+                  .toLowerCase()
+                  .includes("video") &&
+                !src
+                  .toLowerCase()
+                  .includes("play-icon")
+            );
+
+          const mainImage =
             document.querySelector(
               "#landingImage"
-            )?.src || "";
+            )?.src;
+
+          if (
+            mainImage &&
+            !images.includes(
+              mainImage
+            )
+          ) {
+            images.unshift(
+              mainImage
+            );
+          }
+
+          const uniqueImages =
+            [...new Set(images)];
+
+          /* Price */
 
           const priceText =
             document.querySelector(
@@ -49,6 +99,8 @@ const scrapeAmazonProduct =
               )
             ) || 0;
 
+          /* Brand */
+
           const brandText =
             document.querySelector(
               "#bylineInfo"
@@ -64,7 +116,13 @@ const scrapeAmazonProduct =
                 "Store",
                 ""
               )
+              .replace(
+                "Brand:",
+                ""
+              )
               .trim();
+
+          /* Rating */
 
           const ratingText =
             document.querySelector(
@@ -82,129 +140,153 @@ const scrapeAmazonProduct =
             )?.innerText || "";
 
           const reviewsCount =
-            Number(
+            parseInt(
               reviewsText.replace(
-                /[(),]/g,
+                /[^0-9]/g,
                 ""
               )
             ) || 0;
+
+          /* Description */
 
           const description =
             document.querySelector(
               "#productDescription"
             )?.innerText?.trim() ||
+
+            document.querySelector(
+              "#feature-bullets"
+            )?.innerText?.trim() ||
+
             "";
 
-          const features =
-            [
-              ...document.querySelectorAll(
-                "#feature-bullets li span"
-              ),
-            ]
-              .map((item) =>
-                item.innerText.trim()
-              )
-              .filter(
-                (item) =>
-                  item &&
-                  item.length > 5
-              )
-              .slice(0, 20);
+          /* Specifications */
 
           const specifications =
             {};
 
-          document
-            .querySelectorAll(
-              "#productDetails_techSpec_section_1 tr"
-            )
-            .forEach((row) => {
-              const key =
-                row.querySelector(
-                  "th"
-                )?.innerText?.trim();
+          const extractTable =
+            (selector) => {
+              document
+                .querySelectorAll(
+                  selector
+                )
+                .forEach(
+                  (row) => {
+                    const key =
+                      row.querySelector(
+                        "th"
+                      )
+                        ?.innerText?.trim();
 
-              const value =
-                row.querySelector(
-                  "td"
-                )?.innerText?.trim();
+                    const value =
+                      row.querySelector(
+                        "td"
+                      )
+                        ?.innerText?.trim();
 
-              if (
-                key &&
-                value
-              ) {
-                specifications[
-                  key
-                ] = value;
-              }
-            });
-
-          if (
-            Object.keys(
-              specifications
-            ).length === 0
-          ) {
-            document
-              .querySelectorAll(
-                ".a-keyvalue tr"
-              )
-              .forEach(
-                (row) => {
-                  const key =
-                    row.querySelector(
-                      "th"
-                    )?.innerText?.trim();
-
-                  const value =
-                    row.querySelector(
-                      "td"
-                    )?.innerText?.trim();
-
-                  if (
-                    key &&
-                    value
-                  ) {
-                    specifications[
-                      key
-                    ] = value;
+                    if (
+                      key &&
+                      value &&
+                      !specifications[
+                        key
+                      ]
+                    ) {
+                      specifications[
+                        key
+                      ] = value;
+                    }
                   }
-                }
-              );
-          }
+                );
+            };
+
+          extractTable(
+            "#productDetails_techSpec_section_1 tr"
+          );
+
+          extractTable(
+            "#productDetails_detailBullets_sections1 tr"
+          );
+
+          extractTable(
+            ".a-keyvalue tr"
+          );
+
+          /* Features */
+
+          const features = [
+            ...new Set(
+              [
+                ...document.querySelectorAll(
+                  "#feature-bullets li span"
+                ),
+              ]
+                .map((item) =>
+                  item.innerText
+                    .replace(
+                      /\s+/g,
+                      " "
+                    )
+                    .trim()
+                )
+                .filter(
+                  (item) =>
+                    item &&
+                    item.length >
+                      10 &&
+                    !item.includes(
+                      "Make sure this fits"
+                    )
+                )
+            ),
+          ];
+
+          Object.entries(
+            specifications
+          )
+            .slice(0, 8)
+            .forEach(
+              ([
+                key,
+                value,
+              ]) => {
+                features.push(
+                  `${key}: ${value}`
+                );
+              }
+            );
+
+          const uniqueFeatures =
+            [
+              ...new Set(
+                features
+              ),
+            ].slice(0, 15);
 
           return {
             title,
-
             brand,
-
             category:
               "General",
-
             description,
-
-            features,
-
+            features:
+              uniqueFeatures,
             specifications,
-
             images:
-              image
-                ? [image]
-                : [],
-
+              uniqueImages.slice(
+                0,
+                10
+              ),
             price,
-
             rating,
-
             reviewsCount,
           };
         });
 
       return {
         ...productData,
-
         source:
           "Amazon",
-
         productUrl:
           url,
       };

@@ -5,6 +5,8 @@ import {
 
 import Layout from "./components/layout/Layout";
 
+import CompareBar from "./components/compare/CompareBar";
+
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import AdminRoute from "./components/auth/AdminRoute";
 import SellerRoute from "./components/auth/SellerRoute";
@@ -33,107 +35,159 @@ import AlertsPage from "./pages/AlertsPage";
 import WishlistPage from "./pages/WishlistPage";
 
 import ImportProductPage from "./pages/ImportProductPage";
+import ComparePage from "./pages/ComparePage";
 
 function App() {
   return (
-    <Layout>
-      <Routes>
-        <Route
-          path="/"
-          element={<Home />}
-        />
-
-        <Route
-          path="/product/:id"
-          element={<ProductPage />}
-        />
-
-        <Route
-          path="/login"
-          element={<LoginPage />}
-        />
-
-        <Route
-          path="/register"
-          element={<RegisterPage />}
-        />
-
-        <Route
-          path="/search"
-          element={<SearchPage />}
-        />
-
-        <Route element={<ProtectedRoute />}>
+    <>
+      <Layout>
+        <Routes>
           <Route
-            path="/profile"
-            element={<ProfilePage />}
+            path="/"
+            element={<Home />}
           />
 
           <Route
-            path="/alerts"
-            element={<AlertsPage />}
-          />
-
-          <Route
-            path="/wishlist"
-            element={<WishlistPage />}
-          />
-        </Route>
-
-        <Route element={<SellerRoute />}>
-          <Route
-            path="/seller/dashboard"
-            element={<SellerPage />}
-          />
-
-          <Route
-            path="/seller/add-listing"
-            element={<AddListingPage />}
-          />
-
-          <Route
-            path="/seller/manage-listings"
-            element={<ManageListingsPage />}
-          />
-        </Route>
-
-        <Route element={<AdminRoute />}>
-          <Route
-            path="/admin/dashboard"
-            element={<AdminPage />}
-          />
-
-          <Route
-            path="/admin/add-product"
-            element={<AddProductPage />}
-          />
-
-          <Route
-            path="/admin/import-product"
+            path="/product/:id"
             element={
-              <ImportProductPage />
+              <ProductPage />
             }
           />
 
           <Route
-            path="/admin/manage-products"
-            element={<ManageProductsPage />}
+            path="/compare"
+            element={
+              <ComparePage />
+            }
           />
 
           <Route
-            path="/admin/edit-product/:id"
-            element={<EditProductPage />}
+            path="/login"
+            element={
+              <LoginPage />
+            }
           />
 
           <Route
-            path="/admin/listings"
-            element={<AdminListingsPage />}
+            path="/register"
+            element={
+              <RegisterPage />
+            }
           />
-        </Route>
 
+          <Route
+            path="/search"
+            element={
+              <SearchPage />
+            }
+          />
 
-      </Routes>
-    </Layout>
+          <Route
+            element={
+              <ProtectedRoute />
+            }
+          >
+            <Route
+              path="/profile"
+              element={
+                <ProfilePage />
+              }
+            />
+
+            <Route
+              path="/alerts"
+              element={
+                <AlertsPage />
+              }
+            />
+
+            <Route
+              path="/wishlist"
+              element={
+                <WishlistPage />
+              }
+            />
+          </Route>
+
+          <Route
+            element={
+              <SellerRoute />
+            }
+          >
+            <Route
+              path="/seller/dashboard"
+              element={
+                <SellerPage />
+              }
+            />
+
+            <Route
+              path="/seller/add-listing"
+              element={
+                <AddListingPage />
+              }
+            />
+
+            <Route
+              path="/seller/manage-listings"
+              element={
+                <ManageListingsPage />
+              }
+            />
+          </Route>
+
+          <Route
+            element={
+              <AdminRoute />
+            }
+          >
+            <Route
+              path="/admin/dashboard"
+              element={
+                <AdminPage />
+              }
+            />
+
+            <Route
+              path="/admin/add-product"
+              element={
+                <AddProductPage />
+              }
+            />
+
+            <Route
+              path="/admin/import-product"
+              element={
+                <ImportProductPage />
+              }
+            />
+
+            <Route
+              path="/admin/manage-products"
+              element={
+                <ManageProductsPage />
+              }
+            />
+
+            <Route
+              path="/admin/edit-product/:id"
+              element={
+                <EditProductPage />
+              }
+            />
+
+            <Route
+              path="/admin/listings"
+              element={
+                <AdminListingsPage />
+              }
+            />
+          </Route>
+        </Routes>
+      </Layout>
+
+      <CompareBar />
+    </>
   );
 }
 

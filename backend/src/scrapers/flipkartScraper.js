@@ -22,8 +22,14 @@ const scrapeFlipkartProduct =
       const productData =
         await page.evaluate(() => {
           const script =
-            document.querySelector(
-              'script[type="application/ld+json"]'
+            [
+              ...document.querySelectorAll(
+                'script[type="application/ld+json"]'
+              ),
+            ].find((s) =>
+              s.textContent.includes(
+                '"Product"'
+              )
             );
 
           if (!script) {
@@ -39,87 +45,102 @@ const scrapeFlipkartProduct =
 
           const product =
             Array.isArray(json)
-              ? json[0]
+              ? json.find(
+                  (item) =>
+                    item["@type"] ===
+                    "Product"
+                ) || json[0]
               : json;
 
-          const pageLines =
-            document.body.innerText
-              .split("\n")
-              .map((line) =>
-                line.trim()
-              )
-              .filter(Boolean);
+          const pageText =
+            document.body.innerText;
 
           const specifications =
             {};
 
-          for (const line of pageLines) {
-            if (
-              line.includes(
-                "RAM"
-              ) &&
-              line.includes(
-                "ROM"
-              )
-            ) {
-              specifications.Memory =
-                line;
-            }
+          const memoryMatch =
+            pageText.match(
+              /(\d+\s*GB\s*RAM)\s*\|\s*(\d+\s*GB\s*ROM)/i
+            );
 
-            if (
-              line.includes(
-                "Processor"
-              )
-            ) {
-              specifications.Processor =
-                line;
-            }
+          if (memoryMatch) {
+            specifications.RAM =
+              memoryMatch[1];
 
-            if (
-              line.includes(
-                "Rear Camera"
-              )
-            ) {
-              specifications.RearCamera =
-                line;
-            }
-
-            if (
-              line.includes(
-                "Front Camera"
-              )
-            ) {
-              specifications.FrontCamera =
-                line;
-            }
-
-            if (
-              line.includes(
-                "Display"
-              ) &&
-              !line.includes(
-                "Excellent phone"
-              )
-            ) {
-              specifications.Display =
-                line;
-            }
-
-            if (
-              line.includes(
-                "Battery"
-              ) &&
-              line.length < 50
-            ) {
-              specifications.Battery =
-                line;
-            }
+            specifications.Storage =
+              memoryMatch[2];
           }
 
-          const features =
-            Object.values(
-              specifications
+          const processorMatch =
+            pageText.match(
+              /([A-Za-z0-9\s]+Processor\s*\|\s*.*?Clock Speed)/i
             );
+
+          if (processorMatch) {
+            specifications.Processor =
+              processorMatch[1].trim();
+          }
+
+          const rearCameraMatch =
+            pageText.match(
+              /\d+\s*MP.*?Rear Camera/i
+            );
+
+          if (rearCameraMatch) {
+            specifications.RearCamera =
+              rearCameraMatch[0];
+          }
+
+          const frontCameraMatch =
+            pageText.match(
+              /\d+\s*MP.*?Front Camera/i
+            );
+
+          if (frontCameraMatch) {
+            specifications.FrontCamera =
+              frontCameraMatch[0];
+          }
+
+          const displayMatch =
+            pageText.match(
+              /\d+(\.\d+)?\s*inch.*?Display/i
+            );
+
+          if (displayMatch) {
+            specifications.Display =
+              displayMatch[0];
+          }
+
+          const batteryMatch =
+            pageText.match(
+              /\d+\s*mAh\s*Battery/i
+            );
+
+          if (batteryMatch) {
+            specifications.Battery =
+              batteryMatch[0];
+          }
+
+          const features = [
+            specifications.RAM,
+            specifications.Storage,
+            specifications.Processor,
+            specifications.Display,
+            specifications.Battery,
+            specifications.RearCamera,
+            specifications.FrontCamera,
+          ].filter(Boolean);
+
+          const images =
+            Array.isArray(
+              product.image
+            )
+              ? product.image
+              : product.image
+              ? [
+                  product.image,
+                ]
+              : [];
 
           return {
             title:
@@ -132,15 +153,13 @@ const scrapeFlipkartProduct =
 
             category:
               product.category ||
-              "",
+              "General",
 
             description:
               product.description ||
               "",
 
-            images:
-              product.image ||
-              [],
+            images,
 
             price:
               Number(
@@ -151,14 +170,14 @@ const scrapeFlipkartProduct =
             rating:
               Number(
                 product
-                  .aggregateRating
+                  ?.aggregateRating
                   ?.ratingValue
               ) || 0,
 
             reviewsCount:
               Number(
                 product
-                  .aggregateRating
+                  ?.aggregateRating
                   ?.reviewCount
               ) || 0,
 
@@ -170,12 +189,8 @@ const scrapeFlipkartProduct =
 
       return {
         ...productData,
-
-        source:
-          "Flipkart",
-
-        productUrl:
-          url,
+        source: "Flipkart",
+        productUrl: url,
       };
     } finally {
       await browser.close();
