@@ -1,10 +1,14 @@
-const bcrypt = require("bcryptjs");
+const bcrypt =
+  require("bcryptjs");
 
-const User = require("../models/User");
+const User =
+  require("../models/User");
 
-const generateToken = require("../utils/generateToken");
+const generateToken =
+  require("../utils/generateToken");
 
-const asyncHandler = require("../middlewares/asyncHandler");
+const asyncHandler =
+  require("../middlewares/asyncHandler");
 
 const isValidEmail =
   (email) => {
@@ -75,54 +79,41 @@ const registerUser =
     const user =
       await User.create({
         name,
-
         email,
-
         password:
           hashedPassword,
-
         role:
           role || "buyer",
-
         avatar,
-
         shopName,
-
         shopAddress,
-
         city,
-
         phone,
-
         deliveryRadius,
       });
 
     res.status(201).json({
       _id: user._id,
-
       name: user.name,
-
       email: user.email,
-
       role: user.role,
-
       avatar: user.avatar,
-
       shopName:
         user.shopName,
-
       city: user.city,
-
-      token: generateToken(
-        user._id
-      ),
+      token:
+        generateToken(
+          user._id
+        ),
     });
   });
 
 const loginUser =
   asyncHandler(async (req, res) => {
-    const { email, password } =
-      req.body;
+    const {
+      email,
+      password,
+    } = req.body;
 
     if (!isValidEmail(email)) {
       res.status(400);
@@ -161,28 +152,57 @@ const loginUser =
 
     res.status(200).json({
       _id: user._id,
-
       name: user.name,
-
       email: user.email,
-
       role: user.role,
-
       avatar: user.avatar,
-
       shopName:
         user.shopName,
-
       city: user.city,
+      token:
+        generateToken(
+          user._id
+        ),
+    });
+  });
 
-      token: generateToken(
-        user._id
-      ),
+const updateProfile =
+  asyncHandler(async (req, res) => {
+    const user =
+      await User.findById(
+        req.user._id
+      );
+
+    if (!user) {
+      res.status(404);
+
+      throw new Error(
+        "User not found"
+      );
+    }
+
+    user.avatar =
+      req.body.avatar ??
+      user.avatar;
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      avatar: user.avatar,
+      shopName:
+        user.shopName,
+      city: user.city,
     });
   });
 
 module.exports = {
   registerUser,
-
   loginUser,
+  updateProfile,
 };

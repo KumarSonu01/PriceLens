@@ -8,13 +8,29 @@ const upload =
   require("../middlewares/uploadMiddleware");
 
 const {
+  protect,
+} = require(
+  "../middlewares/authMiddleware"
+);
+
+const {
   uploadAvatar,
-} = require("../controllers/uploadController");
+  removeAvatar,
+} = require(
+  "../controllers/uploadController"
+);
 
 router.post(
   "/avatar",
+  protect,
   upload.single("image"),
   uploadAvatar
+);
+
+router.delete(
+  "/avatar",
+  protect,
+  removeAvatar
 );
 
 module.exports =

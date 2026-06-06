@@ -1,20 +1,26 @@
-const express = require("express");
+const express =
+  require("express");
 
 const {
   registerUser,
   loginUser,
+  updateProfile,
 } = require("../controllers/authController");
 
-const { protect } = require("../middlewares/authMiddleware");
+const {
+  protect,
+} = require("../middlewares/authMiddleware");
 
-const validate = require("../middlewares/validateMiddleware");
+const validate =
+  require("../middlewares/validateMiddleware");
 
 const {
   registerSchema,
   loginSchema,
 } = require("../validators/authValidator");
 
-const router = express.Router();
+const router =
+  express.Router();
 
 router.post(
   "/register",
@@ -28,8 +34,19 @@ router.post(
   loginUser
 );
 
-router.get("/profile", protect, (req, res) => {
-  res.json(req.user);
-});
+router.get(
+  "/profile",
+  protect,
+  (req, res) => {
+    res.json(req.user);
+  }
+);
 
-module.exports = router;
+router.put(
+  "/profile",
+  protect,
+  updateProfile
+);
+
+module.exports =
+  router;

@@ -4,6 +4,9 @@ const asyncHandler =
 const cloudinary =
   require("../config/cloudinary");
 
+const User =
+  require("../models/User");
+
 const uploadAvatar =
   asyncHandler(
     async (req, res) => {
@@ -48,6 +51,35 @@ const uploadAvatar =
     }
   );
 
+const removeAvatar =
+  asyncHandler(
+    async (req, res) => {
+      const user =
+        await User.findById(
+          req.user._id
+        );
+
+      if (!user) {
+        res.status(404);
+
+        throw new Error(
+          "User not found"
+        );
+      }
+
+      user.avatar = "";
+
+      await user.save();
+
+      res.status(200).json({
+        success: true,
+        message:
+          "Avatar removed",
+      });
+    }
+  );
+
 module.exports = {
   uploadAvatar,
+  removeAvatar,
 };
