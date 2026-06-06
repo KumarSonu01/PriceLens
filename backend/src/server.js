@@ -11,18 +11,6 @@ const startPriceRefreshJob =
     "./jobs/priceRefreshJob"
   );
 
-const comparisonRoutes =
-  require(
-    "./routes/comparisonRoutes"
-  );
-
-/* Routes */
-
-app.use(
-  "/api/comparison",
-  comparisonRoutes
-);
-
 /* Database */
 
 connectDB();

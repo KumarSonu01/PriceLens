@@ -3,7 +3,6 @@ const controller =
     "../controllers/alertController"
   );
 
-console.log(controller);
 
 const express =
   require("express");

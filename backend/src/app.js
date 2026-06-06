@@ -1,8 +1,11 @@
-const express = require("express");
+const express =
+  require("express");
 
-const cors = require("cors");
+const cors =
+  require("cors");
 
-const morgan = require("morgan");
+const morgan =
+  require("morgan");
 
 const authRoutes =
   require("./routes/authRoutes");
@@ -32,19 +35,13 @@ const uploadRoutes =
   require("./routes/uploadRoutes");
 
 const alertRoutes =
-  require(
-    "./routes/alertRoutes"
-  );
+  require("./routes/alertRoutes");
 
 const comparisonRoutes =
-  require(
-    "./routes/comparisonRoutes"
-  );
+  require("./routes/comparisonRoutes");
 
 const priceHistoryRoutes =
-  require(
-    "./routes/priceHistoryRoutes"
-  );
+  require("./routes/priceHistoryRoutes");
 
 const {
   notFound,
@@ -53,19 +50,40 @@ const {
   "./middlewares/errorMiddleware"
 );
 
-const app = express();
+const app =
+  express();
 
-app.use(cors());
+/* CORS */
 
-app.use(express.json());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      process.env.FRONTEND_URL,
+    ],
+    credentials: true,
+  })
+);
 
-app.use(morgan("dev"));
+/* Middlewares */
+
+app.use(
+  express.json()
+);
+
+app.use(
+  morgan("dev")
+);
+
+/* Health Check */
 
 app.get("/", (req, res) => {
   res.send(
     "PriceLens API Running"
   );
 });
+
+/* Routes */
 
 app.use(
   "/api/auth",
@@ -127,8 +145,15 @@ app.use(
   priceHistoryRoutes
 );
 
-app.use(notFound);
+/* Error Handling */
 
-app.use(errorHandler);
+app.use(
+  notFound
+);
 
-module.exports = app;
+app.use(
+  errorHandler
+);
+
+module.exports =
+  app;
