@@ -4,27 +4,9 @@ const Listing = require("../models/Listing");
 
 const PriceHistory = require("../models/PriceHistory");
 
-const PriceAlert = require("../models/PriceAlert");
+const checkPriceAlerts = require("../jobs/checkPriceAlerts");
 
-const triggerPriceAlerts =
-  async (productId, price) => {
-    const alerts =
-      await PriceAlert.find({
-        product: productId,
 
-        isTriggered: false,
-
-        targetPrice: {
-          $gte: price,
-        },
-      });
-
-    for (const alert of alerts) {
-      alert.isTriggered = true;
-
-      await alert.save();
-    }
-  };
 
 const createListing =
   asyncHandler(async (req, res) => {
@@ -71,10 +53,7 @@ const createListing =
       price,
     });
 
-    await triggerPriceAlerts(
-      product,
-      price
-    );
+    await checkPriceAlerts();
 
     res.status(201).json(
       listing
@@ -241,10 +220,7 @@ const updateListing =
           req.body.price,
       });
 
-      await triggerPriceAlerts(
-        listing.product,
-        req.body.price
-      );
+      await checkPriceAlerts();
     }
 
     res.status(200).json(

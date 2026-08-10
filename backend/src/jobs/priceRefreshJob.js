@@ -59,9 +59,15 @@ const startPriceRefreshJob =
                 continue;
               }
 
+              if ( !scrapedData.price ||  scrapedData.price <= 0) {
+                throw new Error(
+                  `Invalid scraped price: ${scrapedData.price}`
+                );
+            }
+
               const oldPrice =
                 listing.price;
-
+                        
               listing.price =
                 scrapedData.price;
 

@@ -1,17 +1,11 @@
 const PriceAlert =
-  require(
-    "../models/PriceAlert"
-  );
+  require("../models/PriceAlert");
 
 const Listing =
-  require(
-    "../models/Listing"
-  );
+  require("../models/Listing");
 
 const transporter =
-  require(
-    "../config/mailer"
-  );
+  require("../config/mailer");
 
 const checkPriceAlerts =
   async () => {
@@ -24,10 +18,21 @@ const checkPriceAlerts =
           .populate("product");
 
       for (const alert of alerts) {
+        if (
+          !alert.user ||
+          !alert.product
+        ) {
+          continue;
+        }
+
         const cheapestListing =
           await Listing.findOne({
             product:
               alert.product._id,
+
+            price: {
+              $gt: 0,
+            },
           }).sort({
             price: 1,
           });
@@ -41,43 +46,41 @@ const checkPriceAlerts =
           alert.targetPrice
         ) {
           try {
-            await transporter.sendMail(
-              {
-                from:
-                  process.env.EMAIL_USER,
+            await transporter.sendMail({
+              from:
+                process.env.EMAIL_USER,
 
-                to:
-                  alert.user.email,
+              to:
+                alert.user.email,
 
-                subject:
-                  "Price Drop Alert 🔥",
+              subject:
+                "Price Drop Alert 🔥",
 
-                html: `
-                  <h2>Price Drop Detected</h2>
+              html: `
+                <h2>Price Drop Detected</h2>
 
-                  <p>
-                    <strong>
-                      ${alert.product.title}
-                    </strong>
-                  </p>
+                <p>
+                  <strong>
+                    ${alert.product.title}
+                  </strong>
+                </p>
 
-                  <p>
-                    Your target price:
-                    ₹${alert.targetPrice}
-                  </p>
+                <p>
+                  Your target price:
+                  ₹${alert.targetPrice.toLocaleString()}
+                </p>
 
-                  <p>
-                    Current lowest price:
-                    ₹${cheapestListing.price}
-                  </p>
+                <p>
+                  Current lowest price:
+                  ₹${cheapestListing.price.toLocaleString()}
+                </p>
 
-                  <p>
-                    Open PriceLens
-                    to view the deal.
-                  </p>
-                `,
-              }
-            );
+                <p>
+                  Open PriceLens
+                  to view the deal.
+                </p>
+              `,
+            });
 
             alert.isTriggered =
               true;
@@ -87,9 +90,7 @@ const checkPriceAlerts =
             console.log(
               `Alert sent to ${alert.user.email}`
             );
-          } catch (
-            error
-          ) {
+          } catch (error) {
             console.error(
               `Failed sending alert to ${alert.user.email}`
             );
