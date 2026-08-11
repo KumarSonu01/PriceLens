@@ -1,325 +1,630 @@
-const {
-  chromium,
-} = require("playwright");
+const { chromium } = require("playwright");
 
-const scrapeAmazonProduct =
-  async (url) => {
-    const browser =
-      await chromium.launch({
-        headless: true,
+const scrapeAmazonProduct = async (url) => {
+  const browser = await chromium.launch({
+    headless: true,
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+    ],
+  });
+
+  try {
+    const page = await browser.newPage({
+      viewport: {
+        width: 1366,
+        height: 768,
+      },
+
+      userAgent:
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36",
+
+      locale: "en-IN",
+      timezoneId: "Asia/Kolkata",
+    });
+
+    // Extra headers
+    await page.setExtraHTTPHeaders({
+      "Accept-Language":
+        "en-IN,en;q=0.9,en-US;q=0.8",
+      "Upgrade-Insecure-Requests": "1",
+    });
+
+    console.log("========================================");
+    console.log("Starting Amazon scraper");
+    console.log("URL:", url);
+    console.log("========================================");
+
+    // --------------------------------------------------
+    // 1. OPEN AMAZON
+    // --------------------------------------------------
+
+    const response = await page.goto(url, {
+      waitUntil: "domcontentloaded",
+      timeout: 60000,
+    });
+
+    console.log(
+      "Amazon HTTP status:",
+      response ? response.status() : "No response"
+    );
+
+    console.log(
+      "Amazon current URL:",
+      page.url()
+    );
+
+    console.log(
+      "Amazon page title:",
+      await page.title()
+    );
+
+    // Give Amazon a little time to finish rendering
+    await page.waitForTimeout(4000);
+
+    // --------------------------------------------------
+    // 2. DEBUG INFORMATION
+    // --------------------------------------------------
+
+    const currentUrl = page.url();
+    const pageTitle = await page.title();
+
+    console.log(
+      "Amazon final URL:",
+      currentUrl
+    );
+
+    console.log(
+      "Amazon final title:",
+      pageTitle
+    );
+
+    // --------------------------------------------------
+    // 3. DETECT AMAZON CHALLENGE / CAPTCHA
+    // --------------------------------------------------
+
+    const bodyText = await page
+      .locator("body")
+      .innerText()
+      .catch(() => "");
+
+    const lowerBodyText =
+      bodyText.toLowerCase();
+
+    const challengeDetected =
+      lowerBodyText.includes(
+        "enter the characters you see below"
+      ) ||
+      lowerBodyText.includes(
+        "sorry, we just need to make sure you're not a robot"
+      ) ||
+      lowerBodyText.includes(
+        "captcha"
+      ) ||
+      lowerBodyText.includes(
+        "robot check"
+      ) ||
+      lowerBodyText.includes(
+        "automated access"
+      ) ||
+      lowerBodyText.includes(
+        "something went wrong"
+      ) ||
+      currentUrl.includes(
+        "/errors/validateCaptcha"
+      ) ||
+      currentUrl.includes(
+        "captcha"
+      );
+
+    if (challengeDetected) {
+      console.error(
+        "Amazon returned a CAPTCHA / bot challenge."
+      );
+
+      console.error(
+        "Amazon URL:",
+        currentUrl
+      );
+
+      console.error(
+        "Amazon title:",
+        pageTitle
+      );
+
+      console.error(
+        "Amazon body preview:",
+        bodyText.slice(0, 2000)
+      );
+
+      await page
+        .screenshot({
+          path: "/tmp/amazon-challenge.png",
+          fullPage: true,
+        })
+        .catch(() => {});
+
+      throw new Error(
+        "Amazon blocked the automated request with a CAPTCHA or bot challenge."
+      );
+    }
+
+    // --------------------------------------------------
+    // 4. CHECK PRODUCT TITLE
+    // --------------------------------------------------
+
+    const titleSelectors = [
+      "#productTitle",
+      "#title span",
+      "h1#title",
+      "h1 span#productTitle",
+    ];
+
+    let titleSelector = null;
+
+    for (const selector of titleSelectors) {
+      const count = await page
+        .locator(selector)
+        .count()
+        .catch(() => 0);
+
+      console.log(
+        `Selector ${selector}: ${count}`
+      );
+
+      if (count > 0) {
+        titleSelector = selector;
+        break;
+      }
+    }
+
+    if (!titleSelector) {
+      console.error(
+        "Amazon product title was NOT found."
+      );
+
+      console.error(
+        "Current URL:",
+        currentUrl
+      );
+
+      console.error(
+        "Page title:",
+        pageTitle
+      );
+
+      console.error(
+        "Body preview:",
+        bodyText.slice(0, 3000)
+      );
+
+      await page
+        .screenshot({
+          path: "/tmp/amazon-debug.png",
+          fullPage: true,
+        })
+        .catch(() => {});
+
+      throw new Error(
+        "Amazon product page did not contain a recognizable product title. Amazon may have returned a challenge, redirect, unavailable product page, or changed HTML."
+      );
+    }
+
+    await page
+      .locator(titleSelector)
+      .first()
+      .waitFor({
+        state: "visible",
+        timeout: 15000,
       });
 
-    try {
-      const page =
-        await browser.newPage({
-          userAgent:
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36",
-        });
+    // --------------------------------------------------
+    // 5. EXTRACT PRODUCT DATA
+    // --------------------------------------------------
 
-      await page.goto(url, {
-  waitUntil: "domcontentloaded",
-  timeout: 60000,
-});
+    const productData = await page.evaluate(() => {
+      // ----------------------------------------------
+      // TITLE
+      // ----------------------------------------------
 
-console.log("Amazon current URL:", page.url());
-console.log("Amazon page title:", await page.title());
+      const title =
+        document
+          .querySelector("#productTitle")
+          ?.innerText
+          ?.trim() ||
 
-await page.screenshot({
-  path: "/tmp/amazon-debug.png",
-  fullPage: true,
-});
+        document
+          .querySelector("#title span")
+          ?.innerText
+          ?.trim() ||
 
-const productTitleCount =
-  await page.locator("#productTitle").count();
+        document
+          .querySelector("h1#title")
+          ?.innerText
+          ?.trim() ||
 
-console.log(
-  "Amazon #productTitle count:",
-  productTitleCount
-);
+        "";
 
-if (productTitleCount === 0) {
-  const bodyText = await page.locator("body").innerText();
+      // ----------------------------------------------
+      // IMAGES
+      // ----------------------------------------------
 
-  console.log(
-    "Amazon page text preview:",
-    bodyText.slice(0, 2000)
-  );
+      const images = [
+        ...document.querySelectorAll(
+          "#altImages img"
+        ),
+      ]
+        .map((img) => {
+          const src =
+            img.src ||
+            img.getAttribute("data-src") ||
+            img.getAttribute(
+              "data-old-hires"
+            );
 
-  throw new Error(
-    "Amazon product page did not contain #productTitle. Amazon may have returned a challenge, redirect, or different page."
-  );
-}
-
-await page.locator("#productTitle").waitFor({
-  state: "visible",
-  timeout: 15000,
-});
-
-      const productData =
-        await page.evaluate(() => {
-          const title =
-            document.querySelector(
-              "#productTitle"
-            )?.innerText?.trim() ||
-            "";
-
-          /* Images */
-
-          const images = [
-            ...document.querySelectorAll(
-              "#altImages img"
-            ),
-          ]
-            .map((img) =>
-              img.src?.replace(
+          return src
+            ? src.replace(
                 /\._[^.]+_\./,
                 "."
               )
-            )
-            .filter(
-              (src) =>
-                src &&
-                !src
-                  .toLowerCase()
-                  .includes("video") &&
-                !src
-                  .toLowerCase()
-                  .includes("play-icon")
-            );
+            : "";
+        })
+        .filter((src) => {
+          if (!src) return false;
 
-          const mainImage =
-            document.querySelector(
-              "#landingImage"
-            )?.src;
+          const lower =
+            src.toLowerCase();
 
-          if (
-            mainImage &&
-            !images.includes(
-              mainImage
-            )
-          ) {
-            images.unshift(
-              mainImage
-            );
-          }
-
-          const uniqueImages =
-            [...new Set(images)];
-
-          /* Price */
-
-          const priceText =
-            document.querySelector(
-              ".a-price .a-offscreen"
-            )?.innerText ||
-            document.querySelector(
-              ".priceToPay .a-offscreen"
-            )?.innerText ||
-            "";
-
-          const price =
-            Number(
-              priceText.replace(
-                /[₹,]/g,
-                ""
-              )
-            ) || 0;
-
-          /* Brand */
-
-          const brandText =
-            document.querySelector(
-              "#bylineInfo"
-            )?.innerText || "";
-
-          const brand =
-            brandText
-              .replace(
-                "Visit the ",
-                ""
-              )
-              .replace(
-                "Store",
-                ""
-              )
-              .replace(
-                "Brand:",
-                ""
-              )
-              .trim();
-
-          /* Rating */
-
-          const ratingText =
-            document.querySelector(
-              "#acrPopover"
-            )?.innerText || "";
-
-          const rating =
-            parseFloat(
-              ratingText
-            ) || 0;
-
-          const reviewsText =
-            document.querySelector(
-              "#acrCustomerReviewText"
-            )?.innerText || "";
-
-          const reviewsCount =
-            parseInt(
-              reviewsText.replace(
-                /[^0-9]/g,
-                ""
-              )
-            ) || 0;
-
-          /* Description */
-
-          const description =
-            document.querySelector(
-              "#productDescription"
-            )?.innerText?.trim() ||
-
-            document.querySelector(
-              "#feature-bullets"
-            )?.innerText?.trim() ||
-
-            "";
-
-          /* Specifications */
-
-          const specifications =
-            {};
-
-          const extractTable =
-            (selector) => {
-              document
-                .querySelectorAll(
-                  selector
-                )
-                .forEach(
-                  (row) => {
-                    const key =
-                      row.querySelector(
-                        "th"
-                      )
-                        ?.innerText?.trim();
-
-                    const value =
-                      row.querySelector(
-                        "td"
-                      )
-                        ?.innerText?.trim();
-
-                    if (
-                      key &&
-                      value &&
-                      !specifications[
-                        key
-                      ]
-                    ) {
-                      specifications[
-                        key
-                      ] = value;
-                    }
-                  }
-                );
-            };
-
-          extractTable(
-            "#productDetails_techSpec_section_1 tr"
+          return (
+            !lower.includes("video") &&
+            !lower.includes("play-icon") &&
+            !lower.includes("sprite")
           );
-
-          extractTable(
-            "#productDetails_detailBullets_sections1 tr"
-          );
-
-          extractTable(
-            ".a-keyvalue tr"
-          );
-
-          /* Features */
-
-          const features = [
-            ...new Set(
-              [
-                ...document.querySelectorAll(
-                  "#feature-bullets li span"
-                ),
-              ]
-                .map((item) =>
-                  item.innerText
-                    .replace(
-                      /\s+/g,
-                      " "
-                    )
-                    .trim()
-                )
-                .filter(
-                  (item) =>
-                    item &&
-                    item.length >
-                      10 &&
-                    !item.includes(
-                      "Make sure this fits"
-                    )
-                )
-            ),
-          ];
-
-          Object.entries(
-            specifications
-          )
-            .slice(0, 8)
-            .forEach(
-              ([
-                key,
-                value,
-              ]) => {
-                features.push(
-                  `${key}: ${value}`
-                );
-              }
-            );
-
-          const uniqueFeatures =
-            [
-              ...new Set(
-                features
-              ),
-            ].slice(0, 15);
-
-          return {
-            title,
-            brand,
-            category:
-              "General",
-            description,
-            features:
-              uniqueFeatures,
-            specifications,
-            images:
-              uniqueImages.slice(
-                0,
-                10
-              ),
-            price,
-            rating,
-            reviewsCount,
-          };
         });
 
-      return {
-        ...productData,
-        source:
-          "Amazon",
-        productUrl:
-          url,
+      // Main product image
+
+      const mainImage =
+        document.querySelector(
+          "#landingImage"
+        )?.src ||
+
+        document.querySelector(
+          "#imgTagWrapperId img"
+        )?.src ||
+
+        "";
+
+      if (
+        mainImage &&
+        !images.includes(mainImage)
+      ) {
+        images.unshift(mainImage);
+      }
+
+      const uniqueImages = [
+        ...new Set(images),
+      ];
+
+      // ----------------------------------------------
+      // PRICE
+      // ----------------------------------------------
+
+      const priceSelectors = [
+        ".a-price .a-offscreen",
+        ".priceToPay .a-offscreen",
+        "#corePrice_feature_div .a-offscreen",
+        "#apex_desktop .a-offscreen",
+        ".a-price-whole",
+      ];
+
+      let priceText = "";
+
+      for (
+        const selector of priceSelectors
+      ) {
+        const element =
+          document.querySelector(
+            selector
+          );
+
+        if (
+          element?.innerText?.trim()
+        ) {
+          priceText =
+            element.innerText.trim();
+          break;
+        }
+      }
+
+      const price =
+        Number(
+          priceText.replace(
+            /[^0-9.]/g,
+            ""
+          )
+        ) || 0;
+
+      // ----------------------------------------------
+      // BRAND
+      // ----------------------------------------------
+
+      const brandText =
+        document.querySelector(
+          "#bylineInfo"
+        )?.innerText || "";
+
+      const brand =
+        brandText
+          .replace(
+            "Visit the ",
+            ""
+          )
+          .replace(
+            "Store",
+            ""
+          )
+          .replace(
+            "Brand:",
+            ""
+          )
+          .trim();
+
+      // ----------------------------------------------
+      // RATING
+      // ----------------------------------------------
+
+      const ratingText =
+        document.querySelector(
+          "#acrPopover"
+        )?.innerText ||
+
+        document.querySelector(
+          '[data-hook="rating-out-of-text"]'
+        )?.innerText ||
+
+        "";
+
+      const ratingMatch =
+        ratingText.match(
+          /([0-5](?:\.[0-9])?)/
+        );
+
+      const rating =
+        ratingMatch
+          ? parseFloat(
+              ratingMatch[1]
+            )
+          : 0;
+
+      // ----------------------------------------------
+      // REVIEWS
+      // ----------------------------------------------
+
+      const reviewsText =
+        document.querySelector(
+          "#acrCustomerReviewText"
+        )?.innerText ||
+
+        document.querySelector(
+          '[data-hook="total-review-count"]'
+        )?.innerText ||
+
+        "";
+
+      const reviewsCount =
+        parseInt(
+          reviewsText.replace(
+            /[^0-9]/g,
+            ""
+          )
+        ) || 0;
+
+      // ----------------------------------------------
+      // DESCRIPTION
+      // ----------------------------------------------
+
+      const description =
+        document.querySelector(
+          "#productDescription"
+        )?.innerText
+          ?.trim() ||
+
+        document.querySelector(
+          "#feature-bullets"
+        )?.innerText
+          ?.trim() ||
+
+        "";
+
+      // ----------------------------------------------
+      // SPECIFICATIONS
+      // ----------------------------------------------
+
+      const specifications = {};
+
+      const extractTable = (
+        selector
+      ) => {
+        document
+          .querySelectorAll(selector)
+          .forEach((row) => {
+            const key =
+              row
+                .querySelector("th")
+                ?.innerText
+                ?.trim();
+
+            const value =
+              row
+                .querySelector("td")
+                ?.innerText
+                ?.trim();
+
+            if (
+              key &&
+              value &&
+              !specifications[key]
+            ) {
+              specifications[key] =
+                value;
+            }
+          });
       };
-    } finally {
-      await browser.close();
+
+      extractTable(
+        "#productDetails_techSpec_section_1 tr"
+      );
+
+      extractTable(
+        "#productDetails_detailBullets_sections1 tr"
+      );
+
+      extractTable(
+        ".a-keyvalue tr"
+      );
+
+      // ----------------------------------------------
+      // FEATURES
+      // ----------------------------------------------
+
+      const features = [
+        ...new Set(
+          [
+            ...document.querySelectorAll(
+              "#feature-bullets li span"
+            ),
+          ]
+            .map((item) =>
+              item.innerText
+                .replace(
+                  /\s+/g,
+                  " "
+                )
+                .trim()
+            )
+            .filter(
+              (item) =>
+                item &&
+                item.length > 10 &&
+                !item.includes(
+                  "Make sure this fits"
+                )
+            )
+        ),
+      ];
+
+      Object.entries(
+        specifications
+      )
+        .slice(0, 8)
+        .forEach(
+          ([key, value]) => {
+            features.push(
+              `${key}: ${value}`
+            );
+          }
+        );
+
+      const uniqueFeatures = [
+        ...new Set(features),
+      ].slice(0, 15);
+
+      // ----------------------------------------------
+      // RETURN
+      // ----------------------------------------------
+
+      return {
+        title,
+        brand,
+
+        category: "General",
+
+        description,
+
+        features:
+          uniqueFeatures,
+
+        specifications,
+
+        images:
+          uniqueImages.slice(
+            0,
+            10
+          ),
+
+        price,
+
+        rating,
+
+        reviewsCount,
+      };
+    });
+
+    // --------------------------------------------------
+    // 6. VALIDATE RESULT
+    // --------------------------------------------------
+
+    if (!productData.title) {
+      throw new Error(
+        "Amazon scraper extracted an empty product title."
+      );
     }
-  };
+
+    if (
+      !productData.price ||
+      productData.price <= 0
+    ) {
+      console.warn(
+        "Warning: Amazon product price could not be detected."
+      );
+    }
+
+    console.log(
+      "Amazon product scraped successfully:"
+    );
+
+    console.log({
+      title:
+        productData.title,
+      brand:
+        productData.brand,
+      price:
+        productData.price,
+      rating:
+        productData.rating,
+      reviewsCount:
+        productData.reviewsCount,
+      images:
+        productData.images.length,
+    });
+
+    // --------------------------------------------------
+    // 7. RETURN
+    // --------------------------------------------------
+
+    return {
+      ...productData,
+
+      source: "Amazon",
+
+      productUrl: url,
+    };
+  } catch (error) {
+    console.error(
+      "Amazon scraper failed:"
+    );
+
+    console.error(
+      error.message
+    );
+
+    throw error;
+  } finally {
+    await browser.close();
+  }
+};
 
 module.exports =
   scrapeAmazonProduct;
