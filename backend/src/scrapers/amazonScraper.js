@@ -61,24 +61,114 @@ const scrapeAmazonProduct = async (url) => {
     );
 
     // Give Amazon a little time to finish rendering
-    await page.waitForTimeout(4000);
+await page.waitForTimeout(3000);
 
-    // --------------------------------------------------
-    // 2. DEBUG INFORMATION
-    // --------------------------------------------------
+// --------------------------------------------------
+// 2. HANDLE AMAZON "CONTINUE SHOPPING" PAGE
+// --------------------------------------------------
 
-    const currentUrl = page.url();
-    const pageTitle = await page.title();
+let bodyText = await page
+  .locator("body")
+  .innerText()
+  .catch(() => "");
+
+console.log(
+  "Initial Amazon body:",
+  bodyText.slice(0, 1000)
+);
+
+if (
+  bodyText
+    .toLowerCase()
+    .includes("click the button below to continue shopping")
+) {
+  console.log(
+    "Amazon Continue Shopping page detected."
+  );
+
+  const continueButton = page
+    .getByRole("button", {
+      name: /continue shopping/i,
+    })
+    .first();
+
+  if (await continueButton.count()) {
+    console.log(
+      "Clicking Continue Shopping..."
+    );
+
+    await continueButton.click();
+
+    await page.waitForTimeout(5000);
 
     console.log(
-      "Amazon final URL:",
-      currentUrl
+      "URL after Continue Shopping:",
+      page.url()
     );
 
     console.log(
-      "Amazon final title:",
-      pageTitle
+      "Title after Continue Shopping:",
+      await page.title()
     );
+  } else {
+    const continueLink = page
+      .getByText("Continue shopping", {
+        exact: true,
+      })
+      .first();
+
+    if (await continueLink.count()) {
+      console.log(
+        "Clicking Continue Shopping link..."
+      );
+
+      await continueLink.click();
+
+      await page.waitForTimeout(5000);
+
+      console.log(
+        "URL after Continue Shopping:",
+        page.url()
+      );
+
+      console.log(
+        "Title after Continue Shopping:",
+        await page.title()
+      );
+    } else {
+      throw new Error(
+        "Amazon returned a Continue Shopping page, but the Continue Shopping control could not be found."
+      );
+    }
+  }
+}
+
+// --------------------------------------------------
+// 3. DEBUG INFORMATION
+// --------------------------------------------------
+
+const currentUrl = page.url();
+const pageTitle = await page.title();
+
+console.log(
+  "Amazon final URL:",
+  currentUrl
+);
+
+console.log(
+  "Amazon final title:",
+  pageTitle
+);
+
+bodyText = await page
+  .locator("body")
+  .innerText()
+  .catch(() => "");
+
+console.log(
+  "Amazon final body preview:",
+  bodyText.slice(0, 2000)
+);
 
     // --------------------------------------------------
     // 3. DETECT AMAZON CHALLENGE / CAPTCHA
