@@ -17,17 +17,43 @@ const scrapeAmazonProduct =
         });
 
       await page.goto(url, {
-        waitUntil:
-          "domcontentloaded",
-        timeout: 60000,
-      });
+  waitUntil: "domcontentloaded",
+  timeout: 60000,
+});
 
-      await page.waitForSelector(
-        "#productTitle",
-        {
-          timeout: 15000,
-        }
-      );
+console.log("Amazon current URL:", page.url());
+console.log("Amazon page title:", await page.title());
+
+await page.screenshot({
+  path: "/tmp/amazon-debug.png",
+  fullPage: true,
+});
+
+const productTitleCount =
+  await page.locator("#productTitle").count();
+
+console.log(
+  "Amazon #productTitle count:",
+  productTitleCount
+);
+
+if (productTitleCount === 0) {
+  const bodyText = await page.locator("body").innerText();
+
+  console.log(
+    "Amazon page text preview:",
+    bodyText.slice(0, 2000)
+  );
+
+  throw new Error(
+    "Amazon product page did not contain #productTitle. Amazon may have returned a challenge, redirect, or different page."
+  );
+}
+
+await page.locator("#productTitle").waitFor({
+  state: "visible",
+  timeout: 15000,
+});
 
       const productData =
         await page.evaluate(() => {
