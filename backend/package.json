@@ -27,6 +27,7 @@
     "node-cron": "^4.2.1",
     "nodemailer": "^8.0.10",
     "playwright": "^1.60.0",
+    "resend": "^6.19.0",
     "slugify": "^1.6.9"
   },
   "devDependencies": {

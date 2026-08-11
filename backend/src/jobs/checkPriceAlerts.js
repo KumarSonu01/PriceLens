@@ -4,7 +4,7 @@ const PriceAlert =
 const Listing =
   require("../models/Listing");
 
-const transporter =
+const resend =
   require("../config/mailer");
 
 const checkPriceAlerts =
@@ -46,41 +46,51 @@ const checkPriceAlerts =
           alert.targetPrice
         ) {
           try {
-            await transporter.sendMail({
-              from:
-                process.env.EMAIL_USER,
+            const { data, error } =
+              await resend.emails.send({
+                from:
+                  "PriceLens <onboarding@resend.dev>",
 
-              to:
-                alert.user.email,
+                to:
+                  [alert.user.email],
 
-              subject:
-                "Price Drop Alert 🔥",
+                subject:
+                  "Price Drop Alert 🔥",
 
-              html: `
-                <h2>Price Drop Detected</h2>
+                html: `
+                  <h2>
+                    Price Drop Detected
+                  </h2>
 
-                <p>
-                  <strong>
-                    ${alert.product.title}
-                  </strong>
-                </p>
+                  <p>
+                    <strong>
+                      ${alert.product.title}
+                    </strong>
+                  </p>
 
-                <p>
-                  Your target price:
-                  ₹${alert.targetPrice.toLocaleString()}
-                </p>
+                  <p>
+                    Your target price:
+                    ₹${alert.targetPrice.toLocaleString()}
+                  </p>
 
-                <p>
-                  Current lowest price:
-                  ₹${cheapestListing.price.toLocaleString()}
-                </p>
+                  <p>
+                    Current lowest price:
+                    ₹${cheapestListing.price.toLocaleString()}
+                  </p>
 
-                <p>
-                  Open PriceLens
-                  to view the deal.
-                </p>
-              `,
-            });
+                  <p>
+                    Open PriceLens
+                    to view the deal.
+                  </p>
+                `,
+              });
+
+            if (error) {
+              throw new Error(
+                error.message ||
+                  "Resend email failed"
+              );
+            }
 
             alert.isTriggered =
               true;
@@ -89,6 +99,11 @@ const checkPriceAlerts =
 
             console.log(
               `Alert sent to ${alert.user.email}`
+            );
+
+            console.log(
+              "Resend email ID:",
+              data?.id
             );
           } catch (error) {
             console.error(
