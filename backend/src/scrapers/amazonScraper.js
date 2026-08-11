@@ -174,10 +174,10 @@ console.log(
     // 3. DETECT AMAZON CHALLENGE / CAPTCHA
     // --------------------------------------------------
 
-    const bodyText = await page
-      .locator("body")
-      .innerText()
-      .catch(() => "");
+    bodyText = await page
+    .locator("body")
+    .innerText()
+    .catch(() => "");
 
     const lowerBodyText =
       bodyText.toLowerCase();
