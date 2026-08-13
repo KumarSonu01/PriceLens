@@ -279,3 +279,5 @@ Built by Sonu 🚀
 Computer Science Engineering Student  
 MERN Stack Developer  
 Full Stack & Backend Focused
+
+Live URL: https://pricelens-frontend.vercel.app/
