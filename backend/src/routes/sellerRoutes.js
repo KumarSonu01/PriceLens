@@ -1,20 +1,36 @@
-const express = require("express");
+const express =
+  require("express");
 
 const {
   createSellerProfile,
   getSellerProfile,
-} = require("../controllers/sellerController");
+  updateSellerProfile,
+} = require(
+  "../controllers/sellerController"
+);
 
-const { protect } = require("../middlewares/authMiddleware");
+const {
+  protect,
+} = require(
+  "../middlewares/authMiddleware"
+);
 
-const validate = require("../middlewares/validateMiddleware");
+const validate =
+  require(
+    "../middlewares/validateMiddleware"
+  );
 
 const {
   sellerSchema,
-} = require("../validators/sellerValidator");
+} = require(
+  "../validators/sellerValidator"
+);
 
-const router = express.Router();
+const router =
+  express.Router();
 
+
+// Create seller profile
 router.post(
   "/",
   protect,
@@ -22,10 +38,22 @@ router.post(
   createSellerProfile
 );
 
+
+// Get current seller profile
 router.get(
   "/profile",
   protect,
   getSellerProfile
 );
 
-module.exports = router;
+
+// Update current seller profile
+router.put(
+  "/profile",
+  protect,
+  updateSellerProfile
+);
+
+
+module.exports =
+  router;

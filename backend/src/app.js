@@ -7,6 +7,7 @@ const cors =
 const morgan =
   require("morgan");
 
+
 const authRoutes =
   require("./routes/authRoutes");
 
@@ -43,17 +44,25 @@ const comparisonRoutes =
 const priceHistoryRoutes =
   require("./routes/priceHistoryRoutes");
 
+
+const checkPriceAlerts =
+  require("./jobs/checkPriceAlerts");
+
+
 const {
   notFound,
   errorHandler,
-} = require(
-  "./middlewares/errorMiddleware"
-);
+} =
+  require("./middlewares/errorMiddleware");
+
 
 const app =
   express();
 
-/* CORS */
+
+// ==========================================
+// CORS
+// ==========================================
 
 app.use(
   cors({
@@ -65,7 +74,10 @@ app.use(
   })
 );
 
-/* Middlewares */
+
+// ==========================================
+// MIDDLEWARE
+// ==========================================
 
 app.use(
   express.json()
@@ -75,15 +87,24 @@ app.use(
   morgan("dev")
 );
 
-/* Health Check */
 
-app.get("/", (req, res) => {
-  res.send(
-    "PriceLens API Running"
-  );
-});
+// ==========================================
+// ROOT
+// ==========================================
 
-/* Routes */
+app.get(
+  "/",
+  (req, res) => {
+    res.send(
+      "PriceLens API Running"
+    );
+  }
+);
+
+
+// ==========================================
+// API ROUTES
+// ==========================================
 
 app.use(
   "/api/auth",
@@ -145,7 +166,61 @@ app.use(
   priceHistoryRoutes
 );
 
-/* Error Handling */
+
+// ==========================================
+// TEMPORARY PRICE ALERT TEST ROUTE
+// ==========================================
+
+app.get(
+  "/api/test-price-alerts",
+  async (
+    req,
+    res
+  ) => {
+
+    try {
+
+      console.log(
+        "Manual price alert check started..."
+      );
+
+
+      await checkPriceAlerts();
+
+
+      res.status(200).json({
+        success: true,
+        message:
+          "Price alerts checked successfully",
+      });
+
+    } catch (error) {
+
+      console.error(
+        "Manual price alert check failed:"
+      );
+
+      console.error(
+        error
+      );
+
+
+      res.status(500).json({
+        success: false,
+        message:
+          "Price alert check failed",
+        error:
+          error.message,
+      });
+
+    }
+  }
+);
+
+
+// ==========================================
+// ERROR HANDLING
+// ==========================================
 
 app.use(
   notFound
@@ -154,6 +229,7 @@ app.use(
 app.use(
   errorHandler
 );
+
 
 module.exports =
   app;

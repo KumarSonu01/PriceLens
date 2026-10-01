@@ -1,11 +1,20 @@
-const asyncHandler = require("../middlewares/asyncHandler");
+const asyncHandler =
+  require("../middlewares/asyncHandler");
 
-const PriceAlert = require("../models/PriceAlert");
+const PriceAlert =
+  require("../models/PriceAlert");
 
-const Product = require("../models/Product");
+const Product =
+  require("../models/Product");
+
+
+// ==========================================
+// CREATE PRICE ALERT
+// ==========================================
 
 const createPriceAlert =
   asyncHandler(async (req, res) => {
+
     const {
       productId,
       targetPrice,
@@ -13,12 +22,15 @@ const createPriceAlert =
 
     if (
       !productId ||
-      !targetPrice
+      targetPrice === undefined ||
+      targetPrice === null ||
+      Number(targetPrice) <= 0
     ) {
+
       res.status(400);
 
       throw new Error(
-        "Product and target price are required"
+        "Product and valid target price are required"
       );
     }
 
@@ -28,6 +40,7 @@ const createPriceAlert =
       );
 
     if (!product) {
+
       res.status(404);
 
       throw new Error(
@@ -41,10 +54,14 @@ const createPriceAlert =
 
         product: productId,
 
-        targetPrice,
+        targetPrice:
+          Number(targetPrice),
+
+        isTriggered: false,
       });
 
     if (existingAlert) {
+
       res.status(400);
 
       throw new Error(
@@ -54,11 +71,18 @@ const createPriceAlert =
 
     const alert =
       await PriceAlert.create({
-        user: req.user._id,
 
-        product: productId,
+        user:
+          req.user._id,
 
-        targetPrice,
+        product:
+          productId,
+
+        targetPrice:
+          Number(targetPrice),
+
+        isTriggered:
+          false,
       });
 
     res.status(201).json(
@@ -66,8 +90,14 @@ const createPriceAlert =
     );
   });
 
+
+// ==========================================
+// GET USER ALERTS
+// ==========================================
+
 const getUserAlerts =
   asyncHandler(async (req, res) => {
+
     const alerts =
       await PriceAlert.find({
         user: req.user._id,
@@ -85,14 +115,21 @@ const getUserAlerts =
     );
   });
 
+
+// ==========================================
+// DELETE PRICE ALERT
+// ==========================================
+
 const deletePriceAlert =
   asyncHandler(async (req, res) => {
+
     const alert =
       await PriceAlert.findById(
         req.params.id
       );
 
     if (!alert) {
+
       res.status(404);
 
       throw new Error(
@@ -104,6 +141,7 @@ const deletePriceAlert =
       alert.user.toString() !==
       req.user._id.toString()
     ) {
+
       res.status(401);
 
       throw new Error(
@@ -119,10 +157,9 @@ const deletePriceAlert =
     });
   });
 
+
 module.exports = {
   createPriceAlert,
-
   getUserAlerts,
-
   deletePriceAlert,
 };

@@ -16,66 +16,150 @@ const scrapeFlipkartProduct =
 const scrapeAmazonProduct =
   require("../scrapers/amazonScraper");
 
+
+// ==========================================
+// START PRICE REFRESH JOB
+// ==========================================
+
 const startPriceRefreshJob =
   () => {
+
     cron.schedule(
       "0 2 * * *",
+
       async () => {
+
         try {
+
+          console.log(
+            "================================="
+          );
+
           console.log(
             "Running daily price refresh..."
           );
+
+          console.log(
+            "================================="
+          );
+
+
+          // ========================================
+          // GET SCRAPED LISTINGS
+          // ========================================
 
           const listings =
             await Listing.find({
               isScraped: true,
             });
 
+
           console.log(
             `Found ${listings.length} imported products`
           );
 
-          for (const listing of listings) {
+
+          // ========================================
+          // PROCESS LISTINGS
+          // ========================================
+
+          for (
+            const listing of listings
+          ) {
+
             try {
+
               let scrapedData;
+
+
+              // ======================================
+              // FLIPKART
+              // ======================================
 
               if (
                 listing.source ===
                 "Flipkart"
               ) {
+
                 scrapedData =
                   await scrapeFlipkartProduct(
                     listing.productUrl
                   );
-              } else if (
+
+              }
+
+
+              // ======================================
+              // AMAZON
+              // ======================================
+
+              else if (
                 listing.source ===
                 "Amazon"
               ) {
+
                 scrapedData =
                   await scrapeAmazonProduct(
                     listing.productUrl
                   );
-              } else {
+
+              }
+
+
+              // ======================================
+              // UNSUPPORTED SOURCE
+              // ======================================
+
+              else {
+
+                console.log(
+                  `Skipping unsupported source: ${listing.source}`
+                );
+
                 continue;
               }
 
-              if ( !scrapedData.price ||  scrapedData.price <= 0) {
+
+              // ======================================
+              // VALIDATE SCRAPED PRICE
+              // ======================================
+
+              if (
+                !scrapedData ||
+                !scrapedData.price ||
+                scrapedData.price <= 0
+              ) {
+
                 throw new Error(
-                  `Invalid scraped price: ${scrapedData.price}`
+                  `Invalid scraped price: ${
+                    scrapedData?.price
+                  }`
                 );
-            }
+              }
+
+
+              // ======================================
+              // OLD PRICE
+              // ======================================
 
               const oldPrice =
                 listing.price;
-                        
+
+
+              // ======================================
+              // UPDATE LISTING
+              // ======================================
+
               listing.price =
                 scrapedData.price;
 
               listing.rating =
-                scrapedData.rating || 0;
+                scrapedData.rating ||
+                0;
 
               listing.reviewsCount =
-                scrapedData.reviewsCount || 0;
+                scrapedData.reviewsCount ||
+                0;
 
               listing.images =
                 scrapedData.images ||
@@ -84,12 +168,19 @@ const startPriceRefreshJob =
               listing.scrapedAt =
                 new Date();
 
+
               await listing.save();
+
+
+              // ======================================
+              // SAVE PRICE HISTORY
+              // ======================================
 
               if (
                 oldPrice !==
                 scrapedData.price
               ) {
+
                 await PriceHistory.create({
                   product:
                     listing.product,
@@ -101,36 +192,69 @@ const startPriceRefreshJob =
                     scrapedData.price,
                 });
 
+
                 console.log(
                   `${listing.source}: ₹${oldPrice} → ₹${scrapedData.price}`
                 );
               }
+
             } catch (error) {
-              console.log(
+
+              console.error(
                 `Failed ${listing.source}: ${listing._id}`
               );
 
-              console.log(
+              console.error(
                 error.message
               );
             }
           }
 
-          await checkPriceAlerts();
+
+          // ========================================
+          // CHECK PRICE ALERTS
+          // ========================================
 
           console.log(
-            "Price alerts checked"
+            "Checking price alerts..."
           );
+
+
+          await checkPriceAlerts();
+
+
+          console.log(
+            "Price alerts checked successfully"
+          );
+
+
+          console.log(
+            "================================="
+          );
+
         } catch (error) {
-          console.log(error);
+
+          console.error(
+            "Daily price refresh job failed:"
+          );
+
+          console.error(
+            error.message
+          );
         }
+      },
+
+      {
+        timezone: "Asia/Kolkata",
       }
     );
+
 
     console.log(
       "Price refresh cron started"
     );
   };
+
 
 module.exports =
   startPriceRefreshJob;

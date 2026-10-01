@@ -6,13 +6,24 @@ const router =
 
 const {
   protect,
-} = require("../middlewares/authMiddleware");
+} =
+  require(
+    "../middlewares/authMiddleware"
+  );
 
 const {
   createPriceAlert,
   getUserAlerts,
   deletePriceAlert,
-} = require("../controllers/priceAlertController");
+} =
+  require(
+    "../controllers/priceAlertController"
+  );
+
+
+// ==========================================
+// CREATE ALERT
+// ==========================================
 
 router.post(
   "/",
@@ -20,11 +31,21 @@ router.post(
   createPriceAlert
 );
 
+
+// ==========================================
+// GET USER ALERTS
+// ==========================================
+
 router.get(
   "/my-alerts",
   protect,
   getUserAlerts
 );
+
+
+// ==========================================
+// DELETE ALERT
+// ==========================================
 
 router.delete(
   "/:id",
@@ -32,4 +53,6 @@ router.delete(
   deletePriceAlert
 );
 
-module.exports = router;
+
+module.exports =
+  router;

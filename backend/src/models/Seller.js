@@ -18,21 +18,32 @@ const sellerSchema = new mongoose.Schema(
     shopDescription: {
       type: String,
       default: "",
+      trim: true,
     },
 
     phone: {
       type: String,
       required: true,
+      trim: true,
     },
 
     address: {
       type: String,
       required: true,
+      trim: true,
     },
 
     city: {
       type: String,
       required: true,
+      trim: true,
+    },
+
+    // Public store / website / business page
+    storeLink: {
+      type: String,
+      default: "",
+      trim: true,
     },
 
     logo: {
@@ -60,6 +71,9 @@ const sellerSchema = new mongoose.Schema(
   }
 );
 
-const Seller = mongoose.model("Seller", sellerSchema);
+const Seller = mongoose.model(
+  "Seller",
+  sellerSchema
+);
 
 module.exports = Seller;
