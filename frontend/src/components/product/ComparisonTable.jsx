@@ -1,267 +1,165 @@
-const ComparisonTable = ({
-  listings,
-  marketAverage,
-  bestListingId,
-}) => {
+import { useState } from "react";
+import { ExternalLink, Check, X, ArrowUpDown, Award } from "lucide-react";
+import PlatformBadge from "../ui/PlatformBadge";
+import PriceTag from "../ui/PriceTag";
 
-  const getSourceLogo = (
-    source
-  ) => {
+const ComparisonTable = ({ listings = [], marketAverage = 0, bestListingId }) => {
+  const [sortAsc, setSortAsc] = useState(true);
 
-    if (
-      source === "Amazon"
-    ) {
-      return "https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg";
-    }
+  if (!listings || listings.length === 0) {
+    return null;
+  }
 
-    if (
-      source === "Flipkart"
-    ) {
-      return "https://static-assets-web.flixcart.com/www/linchpin/fk-cp-zion/img/fk-logo_f64bb3.png";
-    }
-
-    return "https://via.placeholder.com/40";
-  };
-
+  const sortedListings = [...listings].sort((a, b) => {
+    return sortAsc ? a.price - b.price : b.price - a.price;
+  });
 
   return (
-    <div className="bg-white rounded-2xl shadow overflow-hidden">
+    <div className="w-full bg-surface border border-line rounded-lg overflow-hidden shadow-xs">
+      <div className="p-4 sm:p-5 border-b border-line flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface-2/30">
+        <div>
+          <h2 className="text-lg font-bold text-text tracking-tight flex items-center gap-2">
+            <span>Ranked Merchant Matrix</span>
+            <span className="text-xs font-mono text-muted bg-surface-2 px-2 py-0.5 rounded border border-line">
+              {listings.length} Offers
+            </span>
+          </h2>
+          <p className="text-xs text-muted mt-0.5">
+            Real-time verified marketplace & local storefront stock
+          </p>
+        </div>
 
-      <div className="p-5 border-b">
-
-        <h2 className="text-2xl font-bold">
-          Compare Sellers
-        </h2>
-
+        <button
+          type="button"
+          onClick={() => setSortAsc((prev) => !prev)}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-line bg-surface text-xs font-mono text-muted hover:text-text cursor-pointer transition-colors"
+        >
+          <ArrowUpDown className="w-3 h-3" />
+          <span>Sort by Price: {sortAsc ? "Low → High" : "High → Low"}</span>
+        </button>
       </div>
-
 
       <div className="overflow-x-auto">
-
-        <table className="w-full">
-
-          <thead>
-
-            <tr className="bg-black text-white">
-
-              <th className="p-4 text-left">
-                Seller
-              </th>
-
-              <th className="p-4 text-left">
-                Type
-              </th>
-
-              <th className="p-4 text-left">
-                Price
-              </th>
-
-              <th className="p-4 text-left">
-                Delivery
-              </th>
-
-              <th className="p-4 text-left">
-                Stock
-              </th>
-
-              <th className="p-4 text-left">
-                Status
-              </th>
-
+        <table className="w-full text-left text-sm border-collapse">
+          <thead className="bg-surface-2 text-[11px] font-mono uppercase tracking-wider text-muted border-b border-line">
+            <tr>
+              <th className="py-3 px-4">Merchant / Channel</th>
+              <th className="py-3 px-4">Type</th>
+              <th className="py-3 px-4">Indexed Price</th>
+              <th className="py-3 px-4">Fulfillment</th>
+              <th className="py-3 px-4">Availability</th>
+              <th className="py-3 px-4 text-right">Destination</th>
             </tr>
-
           </thead>
+          <tbody className="divide-y divide-line">
+            {sortedListings.map((listing) => {
+              const isBest = listing._id === bestListingId;
+              const storeUrl = listing.isScraped
+                ? listing.productUrl
+                : listing?.seller?.storeLink;
 
+              const sellerName =
+                listing?.seller?.shopName ||
+                listing?.seller?.name ||
+                listing.source ||
+                "Verified Seller";
 
-          <tbody>
-
-            {listings.map(
-              (listing) => {
-
-                const storeUrl =
-                  listing.isScraped
-                    ? listing.productUrl
-                    : listing?.seller?.storeLink;
-
-
-                return (
-                  <tr
-                    key={
-                      listing._id
-                    }
-                    className="border-b hover:bg-gray-50 transition"
-                  >
-
-                    {/* SELLER */}
-
-                    <td className="p-4">
-
-                      <div className="flex items-center gap-3">
-
-                        <img
-                          src={
-                            listing
-                              ?.seller
-                              ?.avatar ||
-                            getSourceLogo(
-                              listing.source
-                            )
-                          }
-                          alt={
-                            listing.source
-                          }
-                          className="w-10 h-10 rounded-full object-contain border bg-white p-1"
-                        />
-
-
-                        <div>
-
-                          <p className="font-semibold">
-
-                            {listing
-                              ?.seller
-                              ?.shopName ||
-                              listing
-                                ?.seller
-                                ?.name ||
-                              listing.source ||
-                              "Unknown Seller"}
-
-                          </p>
-
-
-                          <p className="text-xs text-gray-500">
-
-                            {listing
-                              ?.seller
-                              ?.email ||
-                              listing.source}
-
-                          </p>
-
-
-                          {storeUrl && (
-                            <a
-                              href={
-                                storeUrl
-                              }
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-green-600 font-semibold hover:underline"
-                            >
-                              Visit Store →
-                            </a>
-                          )}
-
-                        </div>
-
+              return (
+                <tr
+                  key={listing._id}
+                  className={`transition-colors ${
+                    isBest
+                      ? "bg-signal/5 hover:bg-signal/10"
+                      : "hover:bg-surface-2/50"
+                  }`}
+                >
+                  {/* Seller / Platform */}
+                  <td className="py-3.5 px-4">
+                    <div className="flex items-center gap-3">
+                      <PlatformBadge source={listing.source} size="sm" />
+                      <div className="min-w-0">
+                        <p className="font-semibold text-text text-xs sm:text-sm truncate">
+                          {sellerName}
+                        </p>
+                        {isBest && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-mono text-signal font-bold uppercase tracking-tight">
+                            <Award className="w-3 h-3" /> Best Deal
+                          </span>
+                        )}
                       </div>
+                    </div>
+                  </td>
 
-                    </td>
+                  {/* Channel Type */}
+                  <td className="py-3.5 px-4 text-xs font-mono text-muted">
+                    {listing.isScraped ? "Marketplace" : "Local Retailer"}
+                  </td>
 
+                  {/* Price */}
+                  <td className="py-3.5 px-4 font-mono">
+                    <PriceTag
+                      price={listing.price}
+                      size="sm"
+                      highlight={isBest}
+                    />
+                  </td>
 
-                    {/* TYPE */}
+                  {/* Delivery */}
+                  <td className="py-3.5 px-4 text-xs text-text">
+                    <span>{listing.deliveryInfo || "Standard delivery"}</span>
+                    {listing.offer && listing.offer !== "NA" && (
+                      <span className="block text-[10px] text-signal font-mono mt-0.5">
+                        +{listing.offer}
+                      </span>
+                    )}
+                  </td>
 
-                    <td className="p-4">
+                  {/* Stock */}
+                  <td className="py-3.5 px-4">
+                    {listing.stock ? (
+                      <span className="inline-flex items-center gap-1 text-xs text-drop font-medium">
+                        <Check className="w-3.5 h-3.5 stroke-[2.5]" /> In Stock
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-xs text-rise font-medium">
+                        <X className="w-3.5 h-3.5 stroke-[2.5]" /> Out of Stock
+                      </span>
+                    )}
+                  </td>
 
-                      {listing.isScraped
-                        ? "Marketplace"
-                        : "Local Seller"}
-
-                    </td>
-
-
-                    {/* PRICE */}
-
-                    <td className="p-4 font-bold text-green-600">
-
-                      ₹
-                      {listing.price?.toLocaleString()}
-
-                    </td>
-
-
-                    {/* DELIVERY */}
-
-                    <td className="p-4">
-
-                      {listing.deliveryInfo ||
-                        "Not specified"}
-
-                    </td>
-
-
-                    {/* STOCK */}
-
-                    <td className="p-4">
-
-                      {listing.stock ? (
-
-                        <span className="text-green-600 font-semibold">
-                          🟢 In Stock
-                        </span>
-
-                      ) : (
-
-                        <span className="text-red-600 font-semibold">
-                          🔴 Out of Stock
-                        </span>
-
-                      )}
-
-                    </td>
-
-
-                    {/* STATUS */}
-
-                    <td className="p-4">
-
-                      {listing._id ===
-                      bestListingId ? (
-
-                        <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-semibold">
-                          🏆 Best Deal
-                        </span>
-
-                      ) : (
-
-                        <span className="text-gray-500">
-                          -
-                        </span>
-
-                      )}
-
-                    </td>
-
-                  </tr>
-                );
-              }
-            )}
-
+                  {/* Outbound Link */}
+                  <td className="py-3.5 px-4 text-right">
+                    {storeUrl ? (
+                      <a
+                        href={storeUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded bg-surface-2 hover:bg-signal hover:text-black border border-line text-text transition-colors"
+                      >
+                        <span>Visit</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    ) : (
+                      <span className="text-[11px] text-muted font-mono">
+                        Direct store
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
-
         </table>
-
       </div>
 
-
-      <div className="p-4 bg-gray-50 text-sm text-gray-600 flex justify-between">
-
-        <span>
-          Total Sellers:{" "}
-          {listings.length}
-        </span>
-
-        <span>
-          Market Average: ₹
-          {marketAverage.toLocaleString()}
-        </span>
-
+      <div className="p-3.5 bg-surface-2/40 border-t border-line text-xs font-mono text-muted flex items-center justify-between">
+        <span>Total Sellers Indexed: {listings.length}</span>
+        {marketAverage > 0 && (
+          <span>Market Avg: ₹{marketAverage.toLocaleString("en-IN")}</span>
+        )}
       </div>
-
     </div>
   );
 };
-
 
 export default ComparisonTable;

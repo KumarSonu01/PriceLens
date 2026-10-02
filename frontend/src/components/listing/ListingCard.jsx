@@ -1,276 +1,138 @@
-import {
-  FaAmazon,
-  FaStore,
-} from "react-icons/fa";
-
-import {
-  MdLocalShipping,
-} from "react-icons/md";
-
+import { ExternalLink, Truck, Tag, Store, Check, X } from "lucide-react";
+import Card from "../ui/Card";
+import PlatformBadge from "../ui/PlatformBadge";
+import PriceTag from "../ui/PriceTag";
+import Badge from "../ui/Badge";
+import Button from "../ui/Button";
 
 const ListingCard = ({
   listing,
-  isBestDeal,
-  savings,
-  marketAverage,
+  isBestDeal = false,
+  savings = 0,
+  marketAverage = 0,
 }) => {
+  const storeUrl = listing.isScraped
+    ? listing.productUrl
+    : listing?.seller?.storeLink;
 
-  const sourceConfig = {
-    amazon: {
-      name: "Amazon",
-      icon: FaAmazon,
-      bg: "bg-orange-100",
-      text: "text-orange-700",
-      border: "border-orange-200",
-    },
+  const sellerName =
+    listing?.seller?.shopName ||
+    listing?.seller?.name ||
+    listing.source ||
+    "Verified Merchant";
 
-    flipkart: {
-      name: "Flipkart",
-      icon: FaStore,
-      bg: "bg-blue-100",
-      text: "text-blue-700",
-      border: "border-blue-200",
-    },
-
-    blinkit: {
-      name: "Blinkit",
-      icon: FaStore,
-      bg: "bg-yellow-100",
-      text: "text-yellow-700",
-      border: "border-yellow-200",
-    },
-
-    zepto: {
-      name: "Zepto",
-      icon: FaStore,
-      bg: "bg-pink-100",
-      text: "text-pink-700",
-      border: "border-pink-200",
-    },
-
-    local: {
-      name: "Local Store",
-      icon: FaStore,
-      bg: "bg-gray-100",
-      text: "text-gray-700",
-      border: "border-gray-200",
-    },
-  };
-
-
-  const currentSource =
-    sourceConfig[
-      listing.source?.toLowerCase()
-    ] ||
-    sourceConfig.local;
-
-
-  const SourceIcon =
-    currentSource.icon;
-
-
-  const priceDifference =
-    marketAverage -
-    listing.price;
-
-
-  const isHugeDeal =
-    priceDifference > 2000;
-
-
-  /*
-   * Local sellers:
-   *     seller.storeLink
-   *
-   * Marketplaces:
-   *     productUrl
-   */
-  const storeUrl =
-    listing.isScraped
-      ? listing.productUrl
-      : listing?.seller?.storeLink;
-
+  const priceDiff = marketAverage ? marketAverage - listing.price : 0;
+  const isSignificantlyCheaper = priceDiff > 1000;
 
   return (
-    <div
-      className={`bg-white rounded-2xl shadow-md border p-6 transition duration-300 hover:shadow-2xl hover:-translate-y-1 h-full flex flex-col ${
-        isBestDeal
-          ? "border-green-500 ring-2 ring-green-100"
-          : "border-gray-200"
+    <Card
+      hoverable
+      className={`p-5 flex flex-col justify-between h-full transition-all ${
+        isBestDeal ? "border-signal/50 shadow-[0_0_20px_-8px_rgba(200,241,59,0.2)]" : ""
       }`}
     >
-
-      {/* HEADER */}
-
-      <div className="flex items-start justify-between gap-5">
-
-        <div>
-
-          <div
-            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-semibold ${currentSource.bg} ${currentSource.text} ${currentSource.border}`}
-          >
-
-            <SourceIcon />
-
-            {currentSource.name}
-
+      <div>
+        {/* Top Header: Badge, Seller & Lowest tag */}
+        <div className="flex items-start justify-between gap-3 mb-4">
+          <div className="space-y-1.5">
+            <PlatformBadge source={listing.source} size="md" />
+            <div className="flex items-center gap-1.5 text-xs text-muted">
+              <Store className="w-3.5 h-3.5 shrink-0" />
+              <span className="font-medium text-text truncate max-w-[180px]">
+                {sellerName}
+              </span>
+            </div>
           </div>
 
-
-          <div className="mt-3 flex items-center gap-2 text-sm text-gray-500">
-
-            <FaStore />
-
-            <span>
-              {listing?.seller
-                ? listing?.seller?.shopName ||
-                  listing?.seller?.name ||
-                  "Verified Seller"
-                : currentSource.name}
-            </span>
-
+          <div className="text-right">
+            <PriceTag
+              price={listing.price}
+              size="md"
+              highlight={isBestDeal}
+            />
+            {isBestDeal && (
+              <Badge variant="signal" size="sm" className="mt-1">
+                Lowest Price
+              </Badge>
+            )}
+            {savings > 0 && isBestDeal && (
+              <p className="text-[10px] font-mono text-drop mt-1">
+                Save ₹{savings.toLocaleString("en-IN")}
+              </p>
+            )}
           </div>
-
         </div>
 
+        {/* Fulfillment & Availability rows */}
+        <div className="space-y-2 py-3 border-y border-line text-xs">
+          <div className="flex items-center justify-between text-muted">
+            <span className="flex items-center gap-1.5">
+              <Truck className="w-3.5 h-3.5" /> Fulfillment
+            </span>
+            <span className="text-text font-medium text-right truncate max-w-[180px]">
+              {listing.deliveryInfo || "Standard delivery"}
+            </span>
+          </div>
 
-        <div className="text-right">
+          <div className="flex items-center justify-between text-muted">
+            <span>Availability</span>
+            {listing.stock ? (
+              <span className="inline-flex items-center gap-1 text-drop font-medium">
+                <Check className="w-3 h-3" /> In Stock
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-rise font-medium">
+                <X className="w-3 h-3" /> Out of Stock
+              </span>
+            )}
+          </div>
 
-          <p className="text-3xl font-bold text-green-600">
-            ₹
-            {listing.price.toLocaleString()}
-          </p>
-
-
-          {isBestDeal && (
-            <div className="mt-2 inline-block bg-green-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
-              Best Deal
+          {listing.offer && listing.offer !== "NA" && (
+            <div className="flex items-center justify-between text-xs pt-1">
+              <span className="flex items-center gap-1.5 text-signal font-mono">
+                <Tag className="w-3 h-3" /> Offer
+              </span>
+              <span className="text-text font-mono text-right text-[11px] truncate max-w-[180px]">
+                {listing.offer}
+              </span>
             </div>
           )}
 
-
-          {isBestDeal &&
-            savings > 0 && (
-              <div className="mt-2 text-sm text-green-700 font-medium">
-                Save ₹
-                {savings.toLocaleString()}
-              </div>
-            )}
-
+          {isSignificantlyCheaper && (
+            <p className="text-[10px] font-mono text-drop bg-drop/10 border border-drop/20 px-2 py-1 rounded text-center">
+              ₹{Math.round(priceDiff).toLocaleString("en-IN")} cheaper than market average
+            </p>
+          )}
         </div>
-
       </div>
 
-
-      {/* DETAILS */}
-
-      <div className="mt-8 space-y-5 flex-grow">
-
-        <div className="flex items-center justify-between gap-5">
-
-          <div className="flex items-center gap-2 text-gray-600">
-
-            <MdLocalShipping />
-
-            <span>
-              Delivery
-            </span>
-
-          </div>
-
-          <span className="font-medium text-right">
-            {listing.deliveryInfo ||
-              "No delivery info"}
-          </span>
-
-        </div>
-
-
-        <div className="flex items-center justify-between gap-5">
-
-          <span className="text-gray-600">
-            Availability
-          </span>
-
-          <span
-            className={`font-semibold ${
-              listing.stock
-                ? "text-green-600"
-                : "text-red-600"
-            }`}
+      {/* Outbound Link CTA */}
+      <div className="mt-5">
+        {storeUrl ? (
+          <a
+            href={storeUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full"
           >
-            {listing.stock
-              ? "In Stock"
-              : "Out of Stock"}
-          </span>
-
-        </div>
-
-      </div>
-
-
-      {/* DEAL */}
-
-      {isHugeDeal && (
-        <div className="mt-6">
-
-          <div className="inline-flex bg-red-100 text-red-700 px-4 py-2 rounded-lg text-sm font-bold">
-
-            🔥 ₹
-            {Math.round(
-              priceDifference
-            ).toLocaleString()}{" "}
-            Cheaper Than Market
-
-          </div>
-
-        </div>
-      )}
-
-
-      {/* OFFER */}
-
-      {listing.offer &&
-        listing.offer !== "NA" && (
-          <div className="mt-4">
-
-            <div className="inline-flex bg-green-100 text-green-700 px-4 py-2 rounded-lg text-sm font-medium">
-
-              🎉 {listing.offer}
-
-            </div>
-
-          </div>
+            <Button
+              variant={isBestDeal ? "signal" : "secondary"}
+              size="md"
+              disabled={!listing.stock}
+              className="w-full"
+            >
+              <span>{listing.stock ? "Go to Merchant" : "Out of Stock"}</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </Button>
+          </a>
+        ) : (
+          <Button variant="outline" size="md" disabled className="w-full opacity-50">
+            Physical Store Only
+          </Button>
         )}
-
-
-      {/* STORE BUTTON */}
-
-      {storeUrl ? (
-
-        <a
-          href={storeUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full mt-8 bg-black text-white py-3 rounded-xl hover:bg-gray-800 transition text-center font-semibold"
-        >
-          Visit Store →
-        </a>
-
-      ) : (
-
-        <button
-          disabled
-          className="w-full mt-8 bg-gray-300 text-gray-600 py-3 rounded-xl cursor-not-allowed font-semibold"
-        >
-          Store Link Unavailable
-        </button>
-
-      )}
-
-    </div>
+      </div>
+    </Card>
   );
 };
-
 
 export default ListingCard;

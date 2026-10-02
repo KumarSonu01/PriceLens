@@ -1,206 +1,170 @@
-import {
-  useState,
-  useEffect,
-} from "react";
-
-import {
-  Link,
-  useNavigate,
-} from "react-router-dom";
-
-import {
-  useDispatch,
-  useSelector,
-} from "react-redux";
-
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { Eye, EyeOff, Lock, Mail, ArrowRight, ShieldCheck } from "lucide-react";
 import toast from "react-hot-toast";
-
 import api from "../api/axios";
-
-import {
-  setCredentials,
-} from "../features/auth/authSlice";
+import { setCredentials } from "../features/auth/authSlice";
+import SplineHero from "../components/ui/SplineHero";
+import Button from "../components/ui/Button";
+import Input from "../components/ui/Input";
+import FormField from "../components/ui/FormField";
 
 const LoginPage = () => {
-  const [email, setEmail] =
-    useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const [
-    password,
-    setPassword,
-  ] = useState("");
-
-  const [loading, setLoading] =
-    useState(false);
-
-  const dispatch =
-    useDispatch();
-
-  const navigate =
-    useNavigate();
-
-  const { userInfo } =
-    useSelector(
-      (state) => state.auth
-    );
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { userInfo } = useSelector((state) => state.auth);
 
   useEffect(() => {
     if (userInfo) {
-      if (
-        userInfo.role ===
-          "local_seller"
-      ) {
-        navigate(
-          "/seller/dashboard"
-        );
+      if (userInfo.role === "local_seller") {
+        navigate("/seller/dashboard");
+      } else if (userInfo.role === "admin") {
+        navigate("/admin/dashboard");
       } else {
         navigate("/");
       }
     }
   }, [navigate, userInfo]);
 
-  const submitHandler =
-    async (e) => {
-      e.preventDefault();
+  const submitHandler = async (e) => {
+    e.preventDefault();
 
-      try {
-        setLoading(true);
+    if (!email || !password) {
+      toast.error("Please enter email and password");
+      return;
+    }
 
-        const { data } =
-          await api.post(
-            "/auth/login",
-            {
-              email,
-              password,
-            }
-          );
+    try {
+      setLoading(true);
 
-        dispatch(
-          setCredentials(data)
-        );
+      const { data } = await api.post("/auth/login", {
+        email,
+        password,
+      });
 
-        toast.success(
-          "Login successful"
-        );
+      dispatch(setCredentials(data));
+      toast.success("Welcome back to PriceLens");
 
-        if (
-          data.role ===
-            "local_seller"
-        ) {
-          navigate(
-            "/seller/dashboard"
-          );
-        } else {
-          navigate("/");
-        }
-      } catch (error) {
-        console.log(error);
-
-        toast.error(
-          error?.response?.data
-            ?.message ||
-            "Login failed"
-        );
-      } finally {
-        setLoading(false);
+      if (data.role === "local_seller") {
+        navigate("/seller/dashboard");
+      } else if (data.role === "admin") {
+        navigate("/admin/dashboard");
+      } else {
+        navigate("/");
       }
-    };
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Invalid credentials provided");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2">
-      <div className="hidden lg:flex bg-black text-white flex-col justify-center px-16 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-green-600/20 via-black to-black" />
-
-        <div className="relative z-10">
-          <h1 className="text-6xl font-extrabold">
-            Welcome Back
-          </h1>
-
-          <p className="text-2xl mt-6 text-gray-300 leading-relaxed max-w-xl">
-            Continue your
-            smarter shopping
-            experience with
-            PriceLens.
-          </p>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-center p-6 md:p-12 bg-gray-50">
-        <div className="w-full max-w-xl bg-white rounded-3xl shadow-2xl p-8 md:p-10">
-          <div className="mb-8">
-            <h2 className="text-4xl font-extrabold">
-              Login
-            </h2>
-
-            <p className="text-gray-500 mt-3">
-              Access your
-              PriceLens account
+    <div className="min-h-[85vh] grid lg:grid-cols-12 items-stretch">
+      {/* Left Form Panel */}
+      <div className="lg:col-span-6 flex items-center justify-center p-6 sm:p-12 lg:p-16">
+        <div className="w-full max-w-md space-y-8">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-2 border border-line text-[11px] font-mono text-signal uppercase tracking-wider mb-4">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              AUTHENTICATION GATE
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-text">
+              Sign In to Your Terminal
+            </h1>
+            <p className="text-xs sm:text-sm text-muted mt-2">
+              Access saved SKU monitors, personalized alert feeds, and merchant tools.
             </p>
           </div>
 
-          <form
-            onSubmit={
-              submitHandler
-            }
-            className="space-y-5"
-          >
-            <div>
-              <label className="font-semibold block mb-2">
-                Email Address
-              </label>
-
-              <input
+          <form onSubmit={submitHandler} className="space-y-5">
+            <FormField label="Email Coordinate" required>
+              <Input
                 type="email"
+                icon={Mail}
+                placeholder="developer@pricelens.io"
                 value={email}
-                onChange={(e) =>
-                  setEmail(
-                    e.target.value
-                  )
-                }
+                onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full border border-gray-300 rounded-xl px-4 py-3 outline-none"
+                autoComplete="email"
               />
-            </div>
+            </FormField>
 
-            <div>
-              <label className="font-semibold block mb-2">
-                Password
-              </label>
+            <FormField label="Security Key / Password" required>
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  icon={Lock}
+                  placeholder="••••••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  autoComplete="current-password"
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-text cursor-pointer p-1"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+            </FormField>
 
-              <input
-                type="password"
-                value={password}
-                onChange={(e) =>
-                  setPassword(
-                    e.target.value
-                  )
-                }
-                required
-                className="w-full border border-gray-300 rounded-xl px-4 py-3 outline-none"
-              />
-            </div>
-
-            <button
+            <Button
               type="submit"
-              disabled={loading}
-              className="w-full bg-green-600 hover:bg-green-700 transition text-white py-4 rounded-xl font-bold"
+              variant="signal"
+              size="lg"
+              loading={loading}
+              className="w-full"
             >
-              {loading
-                ? "Logging In..."
-                : "Login"}
-            </button>
+              <span>Authenticate Session</span>
+              <ArrowRight className="w-4 h-4" />
+            </Button>
           </form>
 
-          <p className="text-center text-gray-500 mt-8">
-            Don't have an
-            account?{" "}
+          <div className="pt-4 border-t border-line flex items-center justify-between text-xs">
+            <span className="text-muted">Unregistered user?</span>
             <Link
               to="/register"
-              className="font-semibold text-black"
+              className="font-bold text-signal hover:underline"
             >
-              Create Account
+              Create Account →
             </Link>
-          </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Brand Panel (Spline / Fallback) */}
+      <div className="hidden lg:flex lg:col-span-6 bg-surface-2/40 border-l border-line p-12 flex-col justify-between relative overflow-hidden">
+        <div className="space-y-2 relative z-10">
+          <span className="text-xs font-mono text-muted uppercase tracking-widest">
+            PRICELENS SURVEILLANCE
+          </span>
+          <h2 className="text-2xl font-bold tracking-tight text-text">
+            Zero speculation. True landed costs.
+          </h2>
+        </div>
+
+        <div className="my-auto py-12">
+          <SplineHero />
+        </div>
+
+        <div className="text-xs font-mono text-muted relative z-10 border-t border-line/60 pt-4 flex justify-between">
+          <span>SECURE END-TO-END TLS</span>
+          <span>EST. 2026</span>
         </div>
       </div>
     </div>

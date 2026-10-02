@@ -2,10 +2,100 @@
 @tailwind components;
 @tailwind utilities;
 
+:root,
+[data-theme="dark"],
+.dark {
+  --color-bg: #0B0D0C;
+  --color-surface: #121614;
+  --color-surface-2: #1A1F1C;
+  --color-line: rgba(237, 233, 223, 0.10);
+  --color-text: #EDE9DF;
+  --color-muted: #8C938D;
+  --color-signal: #C8F13B;
+  --color-drop: #4ADE80;
+  --color-rise: #FF6B4A;
+  --color-warn: #FFB020;
+  color-scheme: dark;
+}
+
+[data-theme="light"],
+.light {
+  --color-bg: #F3F0E8;
+  --color-surface: #FBF9F4;
+  --color-surface-2: #EAE6DA;
+  --color-line: rgba(11, 13, 12, 0.12);
+  --color-text: #111412;
+  --color-muted: #5E655F;
+  --color-signal: #1F5F3A;
+  --color-drop: #1F7A45;
+  --color-rise: #C2410C;
+  --color-warn: #B45309;
+  color-scheme: light;
+}
+
 body {
   margin: 0;
   padding: 0;
-  box-sizing: border-box;
-  background-color: #f5f5f5;
-  font-family: Arial, sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: 'Bricolage Grotesque', system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Subtle SVG grain overlay (2.5% opacity) */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* Focus styles */
+*:focus-visible {
+  outline: 2px solid var(--color-signal);
+  outline-offset: 2px;
+}
+
+/* Tabular nums for prices & counters */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Custom minimal scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-surface-2);
+  border-radius: 9999px;
+  border: 1px solid var(--color-line);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted);
+}
+
+/* Motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

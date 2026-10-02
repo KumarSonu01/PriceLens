@@ -1,242 +1,233 @@
+import { useState, useMemo } from "react";
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  CartesianGrid,
+  ReferenceLine,
 } from "recharts";
+import Card from "../ui/Card";
+import Stat from "../ui/Stat";
+import EmptyState from "../ui/EmptyState";
+import { TrendingDown, TrendingUp, History } from "lucide-react";
 
-const PriceHistoryChart = ({
-  data,
-}) => {
-  const formattedData =
-    data.map((item) => ({
-      price: item.price,
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <div className="bg-surface border border-line rounded-md p-3 shadow-xl text-xs space-y-1">
+        <p className="font-mono text-muted text-[11px]">{data.fullDate || label}</p>
+        <p className="font-mono text-sm font-bold text-signal tabular-nums">
+          ₹{payload[0].value.toLocaleString("en-IN")}
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
 
-      date: new Date(
-        item.createdAt
-      ).toLocaleDateString(),
-    }));
+const PriceHistoryChart = ({ data = [] }) => {
+  const [range, setRange] = useState("all"); // '7d' | '30d' | '90d' | 'all'
 
-  const lowestPrice =
-    formattedData.length > 0
-      ? Math.min(
-          ...formattedData.map(
-            (item) =>
-              item.price
-          )
-        )
-      : 0;
+  // Format data cleanly handling both string date and createdAt
+  const formattedData = useMemo(() => {
+    if (!data || data.length === 0) return [];
+    return data
+      .map((item) => {
+        const rawDate = item.createdAt || item.date;
+        const d = rawDate ? new Date(rawDate) : new Date();
+        const isValid = !isNaN(d.getTime());
+        return {
+          price: Number(item.price) || 0,
+          dateObj: isValid ? d : new Date(),
+          date: isValid ? d.toLocaleDateString("en-IN", { month: "short", day: "numeric" }) : item.date,
+          fullDate: isValid ? d.toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }) : item.date,
+        };
+      })
+      .sort((a, b) => a.dateObj - b.dateObj);
+  }, [data]);
 
-  const highestPrice =
-    formattedData.length > 0
-      ? Math.max(
-          ...formattedData.map(
-            (item) =>
-              item.price
-          )
-        )
-      : 0;
+  // Filter based on selected timeframe
+  const filteredData = useMemo(() => {
+    if (range === "all" || formattedData.length === 0) return formattedData;
+    const now = new Date();
+    const daysMap = { "7d": 7, "30d": 30, "90d": 90 };
+    const cutoff = new Date(now.getTime() - (daysMap[range] || 30) * 24 * 60 * 60 * 1000);
+    const subset = formattedData.filter((item) => item.dateObj >= cutoff);
+    return subset.length >= 2 ? subset : formattedData;
+  }, [formattedData, range]);
 
-  const currentPrice =
-    formattedData.length > 0
-      ? formattedData[
-          formattedData.length -
-            1
-        ].price
-      : 0;
+  const stats = useMemo(() => {
+    if (filteredData.length === 0) {
+      return { lowest: 0, highest: 0, current: 0, average: 0, change: 0 };
+    }
+    const prices = filteredData.map((d) => d.price);
+    const lowest = Math.min(...prices);
+    const highest = Math.max(...prices);
+    const current = prices[prices.length - 1];
+    const average = Math.round(prices.reduce((a, b) => a + b, 0) / prices.length);
+    const firstPrice = prices[0];
+    const change = firstPrice > 0 ? (((current - firstPrice) / firstPrice) * 100).toFixed(1) : 0;
+    return { lowest, highest, current, average, change };
+  }, [filteredData]);
 
-  const averagePrice =
-    formattedData.length > 0
-      ? Math.round(
-          formattedData.reduce(
-            (
-              total,
-              item
-            ) =>
-              total +
-              item.price,
-            0
-          ) /
-            formattedData.length
-        )
-      : 0;
+  if (formattedData.length < 2) {
+    return (
+      <Card className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold tracking-tight text-text">Price History Trend</h2>
+          <span className="text-xs font-mono text-muted">Awaiting historical records</span>
+        </div>
+        <EmptyState
+          icon={History}
+          title="Insufficient History Points"
+          description="PriceLens is currently tracking this SKU. As price fluctuations occur over 24-48 hours, historical area curves will automatically render here."
+        />
+      </Card>
+    );
+  }
 
-  const firstPrice =
-    formattedData[0]?.price ||
-    0;
-
-  const priceChange =
-    formattedData.length > 1 &&
-    firstPrice > 0
-      ? (
-          ((currentPrice -
-            firstPrice) /
-            firstPrice) *
-          100
-        ).toFixed(1)
-      : 0;
+  const isNetDrop = Number(stats.change) < 0;
 
   return (
-    <div className="bg-white rounded-2xl shadow p-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5 mb-8">
+    <Card className="p-6 space-y-6">
+      {/* Header and Timeframe Filters */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-line pb-4">
         <div>
-          <h2 className="text-2xl font-bold">
-            Price History
-          </h2>
-
-          <p className="text-gray-500 mt-1">
-            Historical price
-            trend
-          </p>
-
-          <p
-            className={`font-semibold mt-2 ${
-              Number(
-                priceChange
-              ) >= 0
-                ? "text-red-600"
-                : "text-green-600"
-            }`}
-          >
-            {Number(
-              priceChange
-            ) >= 0
-              ? `↑ ${priceChange}%`
-              : `↓ ${Math.abs(
-                  priceChange
-                )}%`}
-            {" "}
-            from first
-            recorded price
-          </p>
-        </div>
-
-        <div className="text-sm text-gray-500">
-          {
-            formattedData.length
-          }{" "}
-          Records
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="bg-green-100 text-green-700 rounded-xl p-4">
-          <p className="text-sm font-medium">
-            Current Price
-          </p>
-
-          <h3 className="text-2xl font-bold mt-1">
-            ₹
-            {currentPrice.toLocaleString()}
-          </h3>
-        </div>
-
-        <div className="bg-blue-100 text-blue-700 rounded-xl p-4">
-          <p className="text-sm font-medium">
-            Average Price
-          </p>
-
-          <h3 className="text-2xl font-bold mt-1">
-            ₹
-            {averagePrice.toLocaleString()}
-          </h3>
-        </div>
-
-        <div className="bg-green-100 text-green-700 rounded-xl p-4">
-          <p className="text-sm font-medium">
-            Lowest Price
-          </p>
-
-          <h3 className="text-2xl font-bold mt-1">
-            ₹
-            {lowestPrice.toLocaleString()}
-          </h3>
-        </div>
-
-        <div className="bg-red-100 text-red-700 rounded-xl p-4">
-          <p className="text-sm font-medium">
-            Highest Price
-          </p>
-
-          <h3 className="text-2xl font-bold mt-1">
-            ₹
-            {highestPrice.toLocaleString()}
-          </h3>
-        </div>
-      </div>
-
-      {formattedData.length ===
-      0 ? (
-        <div className="h-[350px] flex items-center justify-center text-gray-500 text-lg">
-          No price history
-          available
-        </div>
-      ) : (
-        <div className="w-full h-[350px] min-w-0">
-          <ResponsiveContainer
-            width="100%"
-            height={350}
-          >
-            <LineChart
-              data={
-                formattedData
-              }
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-bold tracking-tight text-text">
+              Historical Price Intelligence
+            </h2>
+            <span
+              className={`inline-flex items-center gap-1 font-mono text-xs px-2 py-0.5 rounded-full border ${
+                isNetDrop
+                  ? "bg-drop/15 text-drop border-drop/30"
+                  : "bg-rise/15 text-rise border-rise/30"
+              }`}
             >
-              <CartesianGrid strokeDasharray="3 3" />
-
-              <XAxis
-                dataKey="date"
-              />
-
-              <YAxis
-                domain={[
-                  (
-                    dataMin
-                  ) =>
-                    Math.floor(
-                      dataMin *
-                        0.95
-                    ),
-                  (
-                    dataMax
-                  ) =>
-                    Math.ceil(
-                      dataMax *
-                        1.05
-                    ),
-                ]}
-              />
-
-              <Tooltip
-                formatter={(
-                  value
-                ) =>
-                  `₹${Number(
-                    value
-                  ).toLocaleString()}`
-                }
-              />
-
-              <Line
-                type="monotone"
-                dataKey="price"
-                stroke="#16a34a"
-                strokeWidth={3}
-                dot={{
-                  r: 5,
-                }}
-                activeDot={{
-                  r: 8,
-                }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+              {isNetDrop ? <TrendingDown className="w-3 h-3" /> : <TrendingUp className="w-3 h-3" />}
+              {Math.abs(stats.change)}% vs initial
+            </span>
+          </div>
+          <p className="text-xs text-muted mt-1 font-mono">
+            {filteredData.length} checkpoints registered in timeframe
+          </p>
         </div>
-      )}
-    </div>
+
+        {/* 7D / 30D / 90D / All Filters */}
+        <div className="inline-flex items-center bg-surface-2 border border-line rounded-md p-0.5 self-start sm:self-auto">
+          {["7d", "30d", "90d", "all"].map((r) => (
+            <button
+              key={r}
+              type="button"
+              onClick={() => setRange(r)}
+              className={`px-3 py-1 rounded text-xs font-mono uppercase tracking-wider transition-colors cursor-pointer ${
+                range === r
+                  ? "bg-signal text-black font-bold"
+                  : "text-muted hover:text-text"
+              }`}
+            >
+              {r}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* KPI Stats Strip */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <Stat
+          label="Current Price"
+          value={stats.current}
+          prefix="₹"
+          trend={isNetDrop ? "down" : "up"}
+        />
+        <Stat
+          label="Period Average"
+          value={stats.average}
+          prefix="₹"
+        />
+        <Stat
+          label="Period Lowest"
+          value={stats.lowest}
+          prefix="₹"
+          trend="down"
+        />
+        <Stat
+          label="Period Highest"
+          value={stats.highest}
+          prefix="₹"
+          trend="up"
+        />
+      </div>
+
+      {/* Area & Line Chart */}
+      <div className="w-full h-[320px] pt-4">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart
+            data={filteredData}
+            margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
+          >
+            <defs>
+              <linearGradient id="priceGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="var(--color-signal)" stopOpacity={0.25} />
+                <stop offset="95%" stopColor="var(--color-signal)" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+
+            <XAxis
+              dataKey="date"
+              stroke="var(--color-line)"
+              tick={{ fill: "var(--color-muted)", fontSize: 11, fontFamily: "Geist Mono" }}
+              tickLine={false}
+              axisLine={{ stroke: "var(--color-line)" }}
+            />
+
+            <YAxis
+              stroke="var(--color-line)"
+              tick={{ fill: "var(--color-muted)", fontSize: 11, fontFamily: "Geist Mono" }}
+              tickLine={false}
+              axisLine={false}
+              domain={[
+                (dataMin) => Math.floor(dataMin * 0.96),
+                (dataMax) => Math.ceil(dataMax * 1.04),
+              ]}
+              tickFormatter={(v) => `₹${Number(v).toLocaleString("en-IN")}`}
+              width={75}
+            />
+
+            <Tooltip content={<CustomTooltip />} />
+
+            {/* Average Reference Line */}
+            {stats.average > 0 && (
+              <ReferenceLine
+                y={stats.average}
+                stroke="var(--color-line)"
+                strokeDasharray="4 4"
+                label={{
+                  value: `Avg ₹${stats.average.toLocaleString()}`,
+                  fill: "var(--color-muted)",
+                  fontSize: 10,
+                  position: "insideTopRight",
+                }}
+              />
+            )}
+
+            <Area
+              type="monotone"
+              dataKey="price"
+              stroke="var(--color-signal)"
+              strokeWidth={2}
+              fillOpacity={1}
+              fill="url(#priceGradient)"
+              dot={{ r: 3, fill: "var(--color-surface)", stroke: "var(--color-signal)", strokeWidth: 2 }}
+              activeDot={{ r: 6, fill: "var(--color-signal)", stroke: "#0B0D0C", strokeWidth: 2 }}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+    </Card>
   );
 };
 
