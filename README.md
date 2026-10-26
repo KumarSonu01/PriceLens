@@ -1,3 +1,5 @@
+**Live Demo:** [PriceLens](https://pricelens-frontend.vercel.app/)
+
 # 🚀 PriceLens — Smart Product Price Comparison Platform
 
 PriceLens is a full-stack MERN application that helps users compare product prices across multiple sellers and platforms, track price drops, manage wishlists, and discover the best deals intelligently.
@@ -280,4 +282,3 @@ Computer Science Engineering Student
 MERN Stack Developer  
 Full Stack & Backend Focused
 
-Live URL: https://pricelens-frontend.vercel.app/
